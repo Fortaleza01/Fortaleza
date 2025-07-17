@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-72.54965719973711, 7.902209399865941],
+          [-72.54965510039003, 7.90224639935699],
+          [-72.54967120042592, 7.902275999431213],
+          [-72.54970350013497, 7.902292999657925],
+          [-72.54975600027068, 7.902299199783033]
+        ]
+      },
+      "properties": {
+        "highway": "residential",
+        "name": "Vía de Ejemplo",
+        "surface": "unpaved"
+      }
+    }
+  ]
+}

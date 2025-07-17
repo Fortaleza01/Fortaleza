@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-72.5524258, 7.9037154]
+      },
+      "properties": {
+        "Name": "CASA 113",
+        "SECTOR": "EL MIRADOR",
+        "EDAD": 69,
+        "NUMERO_HAB": "2 - 3",
+        "TIPO_FAMIL": "NUCLEAR",
+        "MOTIVO_LLE": "VICTIMA DE LA VIOLENCIA"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-72.5523378, 7.9038375]
+      },
+      "properties": {
+        "Name": "CASA 114",
+        "SECTOR": "PLAN I",
+        "EDAD": 65,
+        "NUMERO_HAB": "1",
+        "TIPO_FAMIL": "SOLA",
+        "MOTIVO_LLE": "MIGRACION INTERNACIONAL"
+      }
+    }
+  ]
+}

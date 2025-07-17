@@ -1,0 +1,42 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#filtro {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+#map {
+  height: 100vh;
+  width: 100%;
+}
+
+.info.legend {
+  background: white;
+  padding: 10px;
+  line-height: 18px;
+  color: #333;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.info.legend h4 {
+  margin: 0 0 5px;
+  font-size: 14px;
+}
+
+.info.legend i {
+  width: 18px;
+  height: 18px;
+  float: left;
+  margin-right: 8px;
+  opacity: 0.8;
+}
