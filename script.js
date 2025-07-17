@@ -1,52 +1,134 @@
-const map = L.map('map').setView([5.548, -73.354], 16);
+const map = L.map("map").setView([7.8998, -72.5487], 16);
 
-// Mapa base
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 20,
-  attribution: '&copy; OpenStreetMap contributors'
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Capas GeoJSON
 const capas = {};
+const controlCapas = L.control.layers(null, null, { collapsed: false }).addTo(map);
 
-// Función para cargar cada archivo
-function cargarGeoJSON(nombre, ruta, estilo, popupFunc) {
-  fetch(ruta)
+let construccionesLayer, encuestasLayer, sectoresLayer, perimetroLayer, viasLayer;
+
+const archivos = [
+  { nombre: "Perímetro", archivo: "data/PERIMETRO_FORTALEZA.json", color: "#000" },
+  { nombre: "Sectores", archivo: "data/SECTORES_FORTALEZA.json", color: "#009688" },
+  { nombre: "Vías", archivo: "data/VIAS_FORTALEZA.json", color: "#f00" },
+  { nombre: "Construcciones", archivo: "data/CONSTRUCCIONES_FORTALEZA.json", color: "#999" },
+  { nombre: "Encuestas", archivo: "data/ENCUESTAS_FORTALEZA.json", color: "#007bff" }
+];
+
+archivos.forEach(capa => {
+  fetch(capa.archivo)
     .then(res => res.json())
     .then(data => {
-      capas[nombre] = L.geoJSON(data, {
-        style: estilo,
-        onEachFeature: popupFunc
+      const layer = L.geoJSON(data, {
+        style: { color: capa.color, weight: 1, fillOpacity: 0.5 },
+        pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+          radius: 4,
+          fillColor: capa.color,
+          color: "#000",
+          weight: 0.5,
+          opacity: 1,
+          fillOpacity: 0.8
+        })
       }).addTo(map);
-    })
-    .catch(err => console.error(`Error cargando ${nombre}:`, err));
-}
 
-// Estilos
-const estiloPerimetro = { color: 'black', weight: 2 };
-const estiloVias = { color: 'gray', weight: 1 };
-const estiloSectores = { color: '#FFA500', weight: 1, fillOpacity: 0.3 };
-const estiloConstrucciones = { color: '#228B22', weight: 0.5, fillOpacity: 0.6 };
-const estiloEncuestas = { color: '#1E90FF', radius: 5 };
+      capas[capa.nombre] = layer;
+      controlCapas.addOverlay(layer, capa.nombre);
 
-// Carga
-cargarGeoJSON("Perímetro", "data/PERIMETRO_FORTALEZA.json", estiloPerimetro);
-cargarGeoJSON("Vías", "data/VIAS_FORTALEZA.json", estiloVias);
-cargarGeoJSON("Sectores", "data/SECTORES_FORTALEZA.json", estiloSectores, (feature, layer) => {
-  const nombre = feature.properties.NOMBRESECT || "Sector";
-  layer.bindPopup(`<strong>${nombre}</strong>`);
-  document.getElementById('sectorSelect').innerHTML += `<option value="${nombre}">${nombre}</option>`;
-});
-cargarGeoJSON("Construcciones", "data/CONSTRUCCIONES_FORTALEZA.json", estiloConstrucciones);
-cargarGeoJSON("Encuestas", "data/ENCUESTAS_FORTALEZA.json", null, (feature, layer) => {
-  layer.bindPopup(`<strong>ID:</strong> ${feature.properties.ID || 'N/A'}`);
+      if (capa.nombre === "Construcciones") construccionesLayer = layer;
+      if (capa.nombre === "Encuestas") encuestasLayer = layer;
+      if (capa.nombre === "Sectores") sectoresLayer = layer;
+      if (capa.nombre === "Perímetro") {
+        perimetroLayer = layer;
+        map.fitBounds(layer.getBounds());  // Ajuste automático al perímetro
+      }
+      if (capa.nombre === "Vías") viasLayer = layer;
+    });
 });
 
-// Filtro de sectores
-document.getElementById('sectorSelect').addEventListener('change', function () {
-  const valor = this.value;
-  capas["Sectores"].eachLayer(layer => {
-    const nombre = layer.feature.properties.NOMBRESECT;
-    layer.setStyle({ fillOpacity: (valor === "TODOS" || valor === nombre) ? 0.3 : 0 });
-  });
+// Leyenda
+const legend = L.control({ position: "bottomright" });
+legend.onAdd = function () {
+  const div = L.DomUtil.create("div", "info legend");
+  div.innerHTML += "<h4>Leyenda</h4>";
+  div.innerHTML += '<i style="background: #000"></i> Perímetro<br>';
+  div.innerHTML += '<i style="background: #009688"></i> Sectores<br>';
+  div.innerHTML += '<i style="background: #f00"></i> Vías<br>';
+  div.innerHTML += '<i style="background: #999"></i> Construcciones<br>';
+  div.innerHTML += '<i style="background: #007bff"></i> Encuestas<br>';
+  return div;
+};
+legend.addTo(map);
+
+// Filtro
+document.getElementById("sectorSelect").addEventListener("change", e => {
+  const sector = e.target.value;
+
+  // Construcciones
+  construccionesLayer.clearLayers();
+  fetch("data/CONSTRUCCIONES_FORTALEZA.json")
+    .then(res => res.json())
+    .then(data => {
+      const filtrado = {
+        ...data,
+        features: sector === "TODOS" ? data.features :
+          data.features.filter(f => f.properties.SECTOR === sector)
+      };
+      construccionesLayer.addData(filtrado);
+    });
+
+  // Encuestas
+  encuestasLayer.clearLayers();
+  fetch("data/ENCUESTAS_FORTALEZA.json")
+    .then(res => res.json())
+    .then(data => {
+      const filtrado = {
+        ...data,
+        features: sector === "TODOS" ? data.features :
+          data.features.filter(f => f.properties.SECTOR === sector)
+      };
+      encuestasLayer.addData(filtrado);
+    });
+
+  // Sectores + centrar
+  sectoresLayer.clearLayers();
+  fetch("data/SECTORES_FORTALEZA.json")
+    .then(res => res.json())
+    .then(data => {
+      const filtrado = {
+        ...data,
+        features: sector === "TODOS" ? data.features :
+          data.features.filter(f => f.properties.SECTOR === sector)
+      };
+      sectoresLayer.addData(filtrado);
+
+      if (sector !== "TODOS" && filtrado.features.length > 0) {
+        const bounds = L.geoJSON(filtrado).getBounds();
+        map.fitBounds(bounds);
+      } else {
+        map.setView([7.8998, -72.5487], 16);  // Volver al centro original
+      }
+    });
+
+  // Perímetro
+  perimetroLayer.clearLayers();
+  fetch("data/PERIMETRO_FORTALEZA.json")
+    .then(res => res.json())
+    .then(data => {
+      perimetroLayer.addData(data);
+    });
+
+  // Vías
+  viasLayer.clearLayers();
+  fetch("data/VIAS_FORTALEZA.json")
+    .then(res => res.json())
+    .then(data => {
+      const filtrado = {
+        ...data,
+        features: sector === "TODOS" ? data.features :
+          data.features.filter(f => f.properties.SECTOR === sector)
+      };
+      viasLayer.addData(filtrado);
+    });
 });
