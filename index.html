@@ -2,36 +2,41 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Visor Territorial – La Fortaleza</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
-  <link rel="stylesheet" href="style.css"/>
+  <title>Visor Territorial La Fortaleza</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="sidebar">
+    <h2>Visor Territorial</h2>
+    <p><strong>La Fortaleza - Cúcuta</strong></p>
 
-  <!-- Panel de filtro -->
-  <div id="filtro">
-    <label for="sectorSelect">Filtrar por sector:</label>
+    <h3>Temas</h3>
+    <label><input type="checkbox" id="chkSectores" checked /> Sectores</label>
+    <label><input type="checkbox" id="chkPerimetro" checked /> Perímetro</label>
+    <label><input type="checkbox" id="chkVias" checked /> Vías</label>
+    <label><input type="checkbox" id="chkConstrucciones" checked /> Construcciones</label>
+    <label><input type="checkbox" id="chkEncuestas" checked /> Encuestas</label>
+
+    <h3>Filtrar por sector</h3>
     <select id="sectorSelect">
-      <option value="TODOS">Todos los sectores</option>
-      <option value="ALTO DEL PADRE">Alto del Padre</option>
-      <option value="BRISAS PAZ Y FUTURO">Brisas Paz y Futuro</option>
-      <option value="BUENA VISTA">Buena Vista</option>
-      <option value="BUENA VISTA PARCELA">Buena Vista Parcela</option>
-      <option value="EL MIRADOR">El Mirador</option>
-      <option value="EL PARAISO">El Paraíso</option>
-      <option value="EL PLAN">El Plan</option>
-      <option value="LA ESCUELA">La Escuela</option>
-      <option value="LAS IGLESIAS">Las Iglesias</option>
-      <option value="LOS PINOS">Los Pinos</option>
-      <option value="SAN MIGUEL">San Miguel</option>
+      <option value="">Todos</option>
+      <option value="ALTO DEL PADRE">ALTO DEL PADRE</option>
+      <option value="BRISAS PAZ Y FUTURO">BRISAS PAZ Y FUTURO</option>
+      <option value="BUENA VISTA">BUENA VISTA</option>
+      <option value="BUENA VISTA PARCELA">BUENA VISTA PARCELA</option>
+      <option value="EL MIRADOR">EL MIRADOR</option>
+      <option value="EL PARAISO">EL PARAISO</option>
+      <option value="EL PLAN">EL PLAN</option>
+      <option value="LA ESCUELA">LA ESCUELA</option>
+      <option value="LAS IGLESIAS">LAS IGLESIAS</option>
+      <option value="LOS PINOS">LOS PINOS</option>
+      <option value="SAN MIGUEL">SAN MIGUEL</option>
     </select>
   </div>
 
-  <!-- Contenedor del mapa -->
   <div id="map"></div>
 
-  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script src="script.js"></script>
 </body>
