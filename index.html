@@ -1,45 +1,71 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Visor Territorial – La Fortaleza</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Leaflet CSS -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visor La Fortaleza</title>
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Hoja de estilos propia -->
-  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
   <!-- Panel lateral -->
   <div id="sidebar">
-    <h2>Visor Territorial</h2>
-    <h4>Sector La Fortaleza – Cúcuta</h4>
-    <label for="sectorSelect"><strong>Filtrar por sector:</strong></label>
-    <select id="sectorSelect">
-      <option value="TODOS">Todos los sectores</option>
-      <option value="ALTO DEL PADRE">ALTO DEL PADRE</option>
-      <option value="BRISAS PAZ Y FUTURO">BRISAS PAZ Y FUTURO</option>
-      <option value="BUENA VISTA">BUENA VISTA</option>
-      <option value="BUENA VISTA PARCELA">BUENA VISTA PARCELA</option>
-      <option value="EL MIRADOR">EL MIRADOR</option>
-      <option value="EL PARAISO">EL PARAISO</option>
-      <option value="EL PLAN">EL PLAN</option>
-      <option value="LA ESCUELA">LA ESCUELA</option>
-      <option value="LAS IGLESIAS">LAS IGLESIAS</option>
-      <option value="LOS PINOS">LOS PINOS</option>
-      <option value="SAN MIGUEL">SAN MIGUEL</option>
-    </select>
-    <hr>
-    <p><small>Desarrollado por <strong>Lab Site Arquitectura</strong></small></p>
+    <h2>Visor La Fortaleza</h2>
+    <div class="tabs">
+      <button class="tablink active" onclick="openTab('inicio')">Inicio</button>
+      <button class="tablink" onclick="openTab('capas')">Capas</button>
+      <button class="tablink" onclick="openTab('creditos')">Créditos</button>
+    </div>
+
+    <div id="inicio" class="tabcontent" style="display:block;">
+      <p><strong>Este visor interactivo</strong> permite visualizar las condiciones territoriales del sector informal <strong>La Fortaleza</strong> en Cúcuta.</p>
+      <p>Utiliza las pestañas para explorar capas temáticas y filtrar por sectores.</p>
+    </div>
+
+    <div id="capas" class="tabcontent">
+      <label for="sectorSelect"><strong>Filtrar por sector:</strong></label>
+      <select id="sectorSelect">
+        <option value="TODOS">Todos los sectores</option>
+        <option value="ALTO DEL PADRE">ALTO DEL PADRE</option>
+        <option value="BRISAS PAZ Y FUTURO">BRISAS PAZ Y FUTURO</option>
+        <option value="BUENA VISTA">BUENA VISTA</option>
+        <option value="BUENA VISTA PARCELA">BUENA VISTA PARCELA</option>
+        <option value="EL MIRADOR">EL MIRADOR</option>
+        <option value="EL PARAISO">EL PARAISO</option>
+        <option value="EL PLAN">EL PLAN</option>
+        <option value="LA ESCUELA">LA ESCUELA</option>
+        <option value="LAS IGLESIAS">LAS IGLESIAS</option>
+        <option value="LOS PINOS">LOS PINOS</option>
+        <option value="SAN MIGUEL">SAN MIGUEL</option>
+      </select>
+    </div>
+
+    <div id="creditos" class="tabcontent">
+      <p><strong>Proyecto desarrollado por:</strong></p>
+      <ul>
+        <li>Lab Site Arquitectura</li>
+        <li>Municipio de Cúcuta</li>
+        <li>Visor experimental 2025</li>
+      </ul>
+    </div>
   </div>
 
   <!-- Mapa -->
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Script personalizado -->
+  <!-- Script principal -->
   <script src="script.js"></script>
+
+  <!-- Script para pestañas -->
+  <script>
+    function openTab(tabId) {
+      document.querySelectorAll('.tabcontent').forEach(tab => tab.style.display = 'none');
+      document.querySelectorAll('.tablink').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      event.currentTarget.classList.add('active');
+    }
+  </script>
 </body>
 </html>

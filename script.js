@@ -1,11 +1,9 @@
-const map = L.map("map").setView([7.8998, -72.5487], 17);
-
-// Base OpenStreetMap
+const map = L.map("map").setView([7.8998, -72.5487], 16);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Colores por sector
+// Colores únicos por sector
 const sectorColors = {
   "ALTO DEL PADRE": "#e41a1c",
   "BRISAS PAZ Y FUTURO": "#377eb8",
@@ -16,134 +14,160 @@ const sectorColors = {
   "EL PLAN": "#a65628",
   "LA ESCUELA": "#f781bf",
   "LAS IGLESIAS": "#999999",
-  "LOS PINOS": "#66c2a5",
+  "LOS PINOS": "#1f78b4",
   "SAN MIGUEL": "#d95f02"
 };
 
-// Almacena las capas
 const capas = {};
 const controlCapas = L.control.layers(null, null, { collapsed: false }).addTo(map);
 
-// Carga Perímetro
-fetch("data/PERIMETRO.json")
-  .then(res => res.json())
-  .then(data => {
-    const layer = L.geoJSON(data, {
-      style: { color: "#000", weight: 2 }
-    }).addTo(map);
-    capas["Perímetro"] = layer;
-    controlCapas.addOverlay(layer, "Perímetro");
-  });
+let construccionesLayer, encuestasLayer, sectoresLayer, perimetroLayer, viasLayer;
 
-// Carga Sectores con color
-let sectoresLayer;
-fetch("data/SECTORES.json")
-  .then(res => res.json())
-  .then(data => {
-    sectoresLayer = L.geoJSON(data, {
-      style: feature => ({
-        color: sectorColors[feature.properties.SECTOR] || "#888",
-        weight: 1,
-        fillOpacity: 0.4
-      }),
-      onEachFeature: (feature, layer) => {
-        layer.bindPopup(`<strong>Sector:</strong> ${feature.properties.SECTOR}`);
-      }
-    }).addTo(map);
-    capas["Sectores"] = sectoresLayer;
-    controlCapas.addOverlay(sectoresLayer, "Sectores");
-  });
+const archivos = [
+  { nombre: "Perímetro", archivo: "data/PERIMETRO.json", tipo: "polygon" },
+  { nombre: "Sectores", archivo: "data/SECTORES.json", tipo: "sector" },
+  { nombre: "Vías", archivo: "data/VIAS.json", tipo: "line", color: "#f00" },
+  { nombre: "Construcciones", archivo: "data/CONSTRUCCIONES.json", tipo: "point", color: "#888" },
+  { nombre: "Encuestas", archivo: "data/ENCUESTAS.json", tipo: "point", color: "#e67e22" }
+];
 
-// Carga Vías
-fetch("data/VIAS.json")
-  .then(res => res.json())
-  .then(data => {
-    const layer = L.geoJSON(data, {
-      style: { color: "#f00", weight: 1 }
-    }).addTo(map);
-    capas["Vías"] = layer;
-    controlCapas.addOverlay(layer, "Vías");
-  });
+// Carga capas
+archivos.forEach(capa => {
+  fetch(capa.archivo)
+    .then(res => res.json())
+    .then(data => {
+      let layer;
 
-// Carga Construcciones
-let construccionesLayer;
-fetch("data/CONSTRUCCIONES.json")
-  .then(res => res.json())
-  .then(data => {
-    construccionesLayer = L.geoJSON(data, {
-      style: feature => ({
-        color: sectorColors[feature.properties.SECTOR] || "#aaa",
-        weight: 0.5,
-        fillOpacity: 0.7
-      }),
-      onEachFeature: (feature, layer) => {
-        layer.bindPopup(`<strong>Construcción</strong><br>Sector: ${feature.properties.SECTOR}`);
-      }
-    }).addTo(map);
-    capas["Construcciones"] = construccionesLayer;
-    controlCapas.addOverlay(construccionesLayer, "Construcciones");
-  });
-
-// Carga Encuestas (círculos)
-let encuestasLayer;
-fetch("data/ENCUESTAS.json")
-  .then(res => res.json())
-  .then(data => {
-    encuestasLayer = L.geoJSON(data, {
-      pointToLayer: (feature, latlng) => {
-        const color = sectorColors[feature.properties.SECTOR] || "#0074D9";
-        return L.circleMarker(latlng, {
-          radius: 4,
-          fillColor: color,
-          color: "#333",
-          weight: 0.6,
-          fillOpacity: 0.9
+      if (capa.tipo === "sector") {
+        layer = L.geoJSON(data, {
+          style: f => ({
+            color: "#555",
+            fillColor: sectorColors[f.properties.SECTOR] || "#ccc",
+            weight: 1,
+            fillOpacity: 0.6
+          }),
+          onEachFeature: (f, l) => {
+            l.bindPopup(`<strong>Sector:</strong> ${f.properties.SECTOR}`);
+          }
         });
-      },
-      onEachFeature: (feature, layer) => {
-        layer.bindPopup(`
-          <strong>Encuesta</strong><br>
-          Sector: ${feature.properties.SECTOR}<br>
-          Hogar: ${feature.properties.CODHOGAR || "N/A"}<br>
-          Código: ${feature.properties.COD || "N/A"}
-        `);
+        sectoresLayer = layer;
       }
-    }).addTo(map);
-    capas["Encuestas"] = encuestasLayer;
-    controlCapas.addOverlay(encuestasLayer, "Encuestas");
-  });
 
-// Leyenda dinámica
-const legend = L.control({ position: "bottomright" });
-legend.onAdd = function () {
-  const div = L.DomUtil.create("div", "legend");
-  div.innerHTML += "<h4>Sectores</h4>";
-  for (const sector in sectorColors) {
-    div.innerHTML += `<i style="background:${sectorColors[sector]}"></i> ${sector}<br>`;
-  }
-  return div;
-};
-legend.addTo(map);
+      else if (capa.tipo === "polygon") {
+        layer = L.geoJSON(data, {
+          style: { color: "#000", weight: 2, fillOpacity: 0.1 },
+          onEachFeature: (f, l) => {
+            l.bindPopup("Límite de estudio");
+          }
+        });
+        perimetroLayer = layer;
+      }
+
+      else if (capa.tipo === "line") {
+        layer = L.geoJSON(data, {
+          style: { color: capa.color || "#333", weight: 1.5 },
+          onEachFeature: (f, l) => {
+            l.bindPopup(`<strong>Vía</strong><br>Sector: ${f.properties.SECTOR}`);
+          }
+        });
+        viasLayer = layer;
+      }
+
+      else if (capa.tipo === "point") {
+        layer = L.geoJSON(data, {
+          pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+            radius: 4,
+            fillColor: capa.color || "#007bff",
+            color: "#000",
+            weight: 0.5,
+            fillOpacity: 0.85
+          }),
+          onEachFeature: (f, l) => {
+            const props = f.properties;
+            let content = capa.nombre === "Encuestas" ?
+              `<strong>Encuesta</strong><br>Sector: ${props.SECTOR}<br>Dirección: ${props.DIRECCION || "Sin dato"}` :
+              `<strong>Construcción</strong><br>Sector: ${props.SECTOR}`;
+            l.bindPopup(content);
+          }
+        });
+        if (capa.nombre === "Encuestas") encuestasLayer = layer;
+        if (capa.nombre === "Construcciones") construccionesLayer = layer;
+      }
+
+      layer.addTo(map);
+      capas[capa.nombre] = layer;
+      controlCapas.addOverlay(layer, capa.nombre);
+    });
+});
 
 // Filtro por sector
 document.getElementById("sectorSelect").addEventListener("change", e => {
   const sector = e.target.value;
 
-  const filtrarCapa = (layer, archivo) => {
-    fetch(`data/${archivo}`)
-      .then(res => res.json())
-      .then(data => {
-        layer.clearLayers();
-        const filtrado = sector === "TODOS" ? data.features :
-          data.features.filter(f => f.properties.SECTOR === sector);
-        layer.addData({ ...data, features: filtrado });
-        if (sector !== "TODOS" && filtrado.length > 0) {
-          map.fitBounds(L.geoJSON(filtrado).getBounds());
-        }
-      });
-  };
+  // Filtrar construcciones
+  fetch("data/CONSTRUCCIONES.json")
+    .then(res => res.json())
+    .then(data => {
+      construccionesLayer.clearLayers();
+      const features = sector === "TODOS" ? data.features :
+        data.features.filter(f => f.properties.SECTOR === sector);
+      construccionesLayer.addData({ ...data, features });
+    });
 
-  if (construccionesLayer) filtrarCapa(construccionesLayer, "CONSTRUCCIONES.json");
-  if (encuestasLayer) filtrarCapa(encuestasLayer, "ENCUESTAS.json");
-  if (sectoresLayer) filtrarCapa(sectoresLayer, "SECTORES.json");
+  // Filtrar encuestas
+  fetch("data/ENCUESTAS.json")
+    .then(res => res.json())
+    .then(data => {
+      encuestasLayer.clearLayers();
+      const features = sector === "TODOS" ? data.features :
+        data.features.filter(f => f.properties.SECTOR === sector);
+      encuestasLayer.addData({ ...data, features });
+    });
+
+  // Filtrar sectores
+  fetch("data/SECTORES.json")
+    .then(res => res.json())
+    .then(data => {
+      sectoresLayer.clearLayers();
+      const features = sector === "TODOS" ? data.features :
+        data.features.filter(f => f.properties.SECTOR === sector);
+      sectoresLayer.addData({ ...data, features });
+
+      if (sector !== "TODOS" && features.length > 0) {
+        const bounds = L.geoJSON({ ...data, features }).getBounds();
+        map.fitBounds(bounds);
+      } else {
+        map.setView([7.8998, -72.5487], 16);
+      }
+    });
+
+  // Filtrar vías
+  fetch("data/VIAS.json")
+    .then(res => res.json())
+    .then(data => {
+      viasLayer.clearLayers();
+      const features = sector === "TODOS" ? data.features :
+        data.features.filter(f => f.properties.SECTOR === sector);
+      viasLayer.addData({ ...data, features });
+    });
+
+  // Perímetro permanece constante
+  fetch("data/PERIMETRO.json")
+    .then(res => res.json())
+    .then(data => {
+      perimetroLayer.clearLayers();
+      perimetroLayer.addData(data);
+    });
 });
+
+// Leyenda dinámica
+const legend = L.control({ position: "bottomright" });
+legend.onAdd = function () {
+  const div = L.DomUtil.create("div", "info legend");
+  div.innerHTML += "<h4>Sectores</h4>";
+  for (const [nombre, color] of Object.entries(sectorColors)) {
+    div.innerHTML += `<i style="background:${color}"></i> ${nombre}<br>`;
+  }
+  return div;
+};
+legend.addTo(map);
