@@ -1,18 +1,17 @@
-/* ----------  Configuración general  ---------- */
-const map = L.map('map', { zoomControl: false });   // movemos zoom a la derecha
-const grayBase = L.tileLayer(
+/* ----------  mapa base  ---------- */
+const map = L.map('map', { zoomControl:false });
+const baseGray = L.tileLayer(
   'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  { attribution: '&copy; OSM | &copy; Carto', maxZoom: 19 }
-);
-const colorBase = L.tileLayer(
+  { attribution:'&copy; OSM & Carto', maxZoom:19 }
+).addTo(map);
+const baseColor = L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }
+  { attribution:'&copy; OpenStreetMap', maxZoom:19 }
 );
-grayBase.addTo(map);  // base por defecto
-let currentBase = 'gray';   // estado para el botón
+let grayIsOn = true;
 
-/* ----------  Colores por sector  ---------- */
-const sectorColors = {
+/* ----------  paleta de sectores  ---------- */
+const palette = {
   'EL PLAN'        : '#ff6666',
   'LOS PINOS'      : '#66c2ff',
   'EL MIRADOR'     : '#ffd966',
@@ -22,123 +21,80 @@ const sectorColors = {
   'SAN MIGUEL'     : '#ff66c2'
 };
 
-/* ----------  Capas globales  ---------- */
-let sectorLayer, construLayer, encuestasLayer, viasLayer, perimetroLayer;
+/* ----------  capas  ---------- */
+let capaPerimetro, capaSectores, cConstru, cPuntos, cVias;
 
-/* ----------  Cargar GeoJSONs  ---------- */
+/* carga simultánea de geojson */
 Promise.all([
-  fetch('SECTORES.json').then(r => r.json()),
-  fetch('CONSTRUCCIONES.json').then(r => r.json()),
-  fetch('ENCUESTAS.json').then(r => r.json()),
-  fetch('VIAS.json').then(r => r.json()),
-  fetch('PERIMETRO.json').then(r => r.json())
-]).then(loadLayers)
-  .catch(err => console.error('Error cargando archivos GeoJSON:', err));
+  fetch('SECTORES.json').then(r=>r.json()),
+  fetch('PERIMETRO.json').then(r=>r.json()),
+  fetch('CONSTRUCCIONES.json').then(r=>r.json()),
+  fetch('ENCUESTAS.json').then(r=>r.json()),
+  fetch('VIAS.json').then(r=>r.json())
+]).then(([gSectores,gPerim,gCons,gEncu,gVias]) => {
 
-function loadLayers([sectores, construcciones, encuestas, vias, perimetro]) {
-
-  /* PERÍMETRO – para fitBounds y referencia */
-  perimetroLayer = L.geoJSON(perimetro, {
-    style: {
-      color: '#0099e6',
-      weight: 3,
-      fill: false
-    }
+  capaPerimetro = L.geoJSON(gPerim,{
+    style:{color:'#007ad6',weight:3,fill:false}
   }).addTo(map);
+  map.fitBounds(capaPerimetro.getBounds());
 
-  map.fitBounds(perimetroLayer.getBounds());
-
-  /* SECTORES */
-  sectorLayer = L.geoJSON(sectores, {
-    style: feat => ({
-      color      : '#333',
-      weight     : 2,
-      fillColor  : sectorColors[feat.properties.SECTOR] || '#cccccc',
-      fillOpacity: 0.35
+  /* sectores */
+  capaSectores = L.geoJSON(gSectores,{
+    style:f=>({
+      color:'#444',
+      weight:2,
+      fillColor: palette[f.properties.SECTOR]||'#ccc',
+      fillOpacity:.35
     }),
-    onEachFeature: (feat, layer) => {
-      const nombre = feat.properties.SECTOR;
-      layer.bindTooltip(nombre, { className: 'sector-label', direction: 'center' });
+    onEachFeature:(f,l)=>{
+      l.bindTooltip(f.properties.SECTOR,{className:'sectorTT',direction:'center'});
     }
   }).addTo(map);
 
-  /* Popular el selector */
-  const select = document.getElementById('sectorSelect');
-  Object.keys(sectorColors).forEach(sec => {
-    const opt = document.createElement('option');
-    opt.value = sec;
-    opt.textContent = sec;
-    select.appendChild(opt);
+  /* desplegable */
+  const sel = document.getElementById('sectorSel');
+  Object.keys(palette).forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s; o.textContent=s; sel.appendChild(o);
   });
-
-  /* CONSTRUCCIONES */
-  construLayer = L.geoJSON(construcciones, {
-    style: {
-      color: '#e74c3c',
-      weight: 1,
-      fillColor: '#9b59b6',
-      fillOpacity: 0.7
-    }
-  }).addTo(map);
-
-  /* ENCUESTAS – puntos */
-  encuestasLayer = L.geoJSON(encuestas, {
-    pointToLayer: (feat, latlng) =>
-      L.circleMarker(latlng, {
-        radius       : 7,
-        color        : '#1abc9c',
-        weight       : 2,
-        fillColor    : '#fff44f',
-        fillOpacity  : 0.9
-      })
-      .bindPopup(`
-        <strong>${feat.properties.Name || 'Encuesta'}</strong><br>
-        Sector: ${feat.properties.SECTOR || 'n/d'}
-      `)
-  }).addTo(map);
-
-  /* VÍAS */
-  viasLayer = L.geoJSON(vias, {
-    style: {
-      color: '#d4a017',
-      weight: 2
-    }
-  }).addTo(map);
-
-  /* Evento del selector */
-  select.addEventListener('change', e => {
-    const val = e.target.value;
-    sectorLayer.eachLayer(l => {
-      const visible = (val === 'todos') || (l.feature.properties.SECTOR === val);
-      l.setStyle({ opacity: visible ? 1 : 0, fillOpacity: visible ? 0.35 : 0 });
+  sel.onchange = e =>{
+    const val=e.target.value;
+    capaSectores.eachLayer(l=>{
+      const ok = (val==='all') || (l.feature.properties.SECTOR===val);
+      l.setStyle({opacity:ok?1:0,fillOpacity:ok?.35:0});
     });
-  });
-}
+  };
 
-/* ----------  Controles personalizados  ---------- */
-document.getElementById('homeBtn').onclick = () => {
-  if (perimetroLayer) map.fitBounds(perimetroLayer.getBounds());
+  /* construcciones */
+  cConstru = L.geoJSON(gCons,{
+    style:{color:'#e74c3c',weight:1,fillOpacity:.7,fillColor:'#9b59b6'}
+  }).addTo(map);
+
+  /* encuestas */
+  cPuntos = L.geoJSON(gEncu,{
+    pointToLayer:(f,ll)=>
+      L.circleMarker(ll,{
+        radius:6, weight:2, color:'#2ecc71',
+        fillColor:'#fff44f', fillOpacity:.9
+      }).bindPopup(`<b>${f.properties.Name||'Encuesta'}</b><br>Sector: ${f.properties.SECTOR||'n/d'}`)
+  }).addTo(map);
+
+  /* vías */
+  cVias = L.geoJSON(gVias,{ style:{color:'#d4a017',weight:2} }).addTo(map);
+});
+
+/* ----------  botones  ---------- */
+document.getElementById('homeBtn').onclick = ()=> capaPerimetro && map.fitBounds(capaPerimetro.getBounds());
+
+document.getElementById('baseBtn').onclick = ()=>{
+  if(grayIsOn){ map.removeLayer(baseGray); baseColor.addTo(map); }
+  else        { map.removeLayer(baseColor); baseGray.addTo(map); }
+  grayIsOn=!grayIsOn;
 };
 
-document.getElementById('basemapBtn').onclick = () => {
-  if (currentBase === 'gray') {
-    map.removeLayer(grayBase);
-    colorBase.addTo(map);
-    currentBase = 'color';
-  } else {
-    map.removeLayer(colorBase);
-    grayBase.addTo(map);
-    currentBase = 'gray';
-  }
-};
+document.getElementById('aboutBtn').onclick = ()=> alert(
+  'Visor «La Fortaleza»\nProyecto Orquídea #109089 – Minciencias\nPontificia Universidad Javeriana'
+);
 
-document.getElementById('infoBtn').onclick = () => {
-  alert(
-    'CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza\n' +
-    'Proyecto Orquídea # 109089, Minciencias\n' +
-    'Pontificia Universidad Javeriana'
-  );
-};
-
-/* Mover control de zoom a la derecha */
-L.control.zoom({ position: 'topright' }).addTo(map);
+/* zoom a la derecha */
+L.control.zoom({position:'topright'}).addTo(map);

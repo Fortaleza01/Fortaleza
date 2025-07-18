@@ -2,50 +2,44 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</title>
+  <title>Visor «La Fortaleza» – Construcción de Paz Urbana</title>
 
-  <!-- Leaflet CDN -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha512-xwE/HOtDtDq2v2h1XgEuB4AWuYDxw+eNPkS3F2oaVb0nR8q8nb1nP9yEG4r3FeZBLQU7lg2hGzLMKNwXg5BsQw=="
-    crossorigin=""
-  />
+  <!-- Leaflet -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha512-xwE/HOtDtDq2v2h1XgEuB4AWuYDxw+eNPkS3F2oaVb0nR8q8nb1nP9yEG4r3FeZBLQU7lg2hGzLMKNwXg5BsQw=="
+        crossorigin=""/>
 
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Cabecera -->
-  <header>
-    <img src="LOGOS FORTALEZA.001.png" alt="Logos PUJ & Minciencias" id="logos">
-    <div id="titulos">
-      <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
-      <p>Proyecto Orquídea # 109089 – Minciencias<br>Pontificia Universidad Javeriana</p>
-    </div>
-  </header>
-
-  <!-- Controles fijos -->
-  <div id="sidebar">
-    <label for="sectorSelect">Ver sector:</label>
-    <select id="sectorSelect">
-      <option value="todos">Todos los sectores</option>
-      <!-- Las opciones restantes las llena script.js dinámicamente -->
-    </select>
-    <button id="homeBtn" title="Centrar mapa">🏠</button>
-    <button id="basemapBtn" title="Cambiar mapa base">🗺️</button>
-    <button id="infoBtn" title="Información">ℹ️</button>
+<header>
+  <img id="logo" src="LOGOS FORTALEZA.001.png" alt="Logos proyecto">
+  <div>
+    <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
+    <p>Proyecto Orquídea # 109089 · Minciencias · Pontificia Universidad Javeriana</p>
   </div>
+</header>
 
-  <div id="map"></div>
+<!-- controles -->
+<div id="ui">
+  <select id="sectorSel">
+    <option value="all">Todos los sectores</option>
+  </select>
+  <button id="homeBtn" title="Centrar mapa">🏠</button>
+  <button id="baseBtn" title="Cambiar mapa base">🗺️</button>
+  <button id="aboutBtn" title="Información">ℹ️</button>
+</div>
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha512-YiHi9oM0J5XJo7Q5NGB6m6cje41OQn9A5qaOqOfahrjzlXsh8mBPnN1xp72I1HKa0VrZiCdi3Wudu+3og7+MOg=="
-    crossorigin="">
-  </script>
+<div id="map"></div>
 
-  <script src="script.js"></script>
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha512-YiHi9oM0J5XJo7Q5NGB6m6cje41OQn9A5qaOqOfahrjzlXsh8mBPnN1xp72I1HKa0VrZiCdi3Wudu+3og7+MOg=="
+        crossorigin="">
+</script>
+
+<script src="script.js"></script>
 </body>
 </html>

@@ -1,75 +1,51 @@
-/* Fuente y reset básico */
 html, body {
   height: 100%;
   margin: 0;
   font-family: Helvetica, Arial, sans-serif;
 }
 
-/* Cabecera */
+/* cabecera */
 header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: .5rem 1rem;
-  background: #ffffff;
-  border-bottom: 1px solid #ddd;
+  padding: .6rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
 }
+header h1   { font-size: 1.15rem; margin: 0 0 .25rem }
+header p    { margin: 0; font-size: .85rem; }
+#logo       { height: 54px; }
 
-#logos {
-  height: 60px;
-  object-fit: contain;
-}
-
-#titulos h1 {
-  margin: .1rem 0 .2rem;
-  font-size: 1.2rem;
-}
-#titulos p {
-  margin: 0;
-  font-size: .9rem;
-}
-
-/* Sidebar de controles */
-#sidebar {
+/* panel de controles */
+#ui {
   position: absolute;
-  top: 80px;           /* debajo del header */
-  left: .5rem;
+  top: 82px;
+  left: 10px;
   z-index: 1000;
   background: rgba(255,255,255,.9);
-  padding: .7rem .6rem;
+  padding: .6rem;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,.16);
   display: flex;
   flex-direction: column;
   gap: .4rem;
-  font-size: .82rem;
 }
-
-#sidebar select,
-#sidebar button {
+#ui select, #ui button {
+  font-size: .8rem;
   font-family: inherit;
-  font-size: .82rem;
 }
-
-#sidebar button {
+#ui button {
   cursor: pointer;
   border: 1px solid #888;
-  background: #f4f4f4;
+  background: #f3f3f3;
   border-radius: 4px;
-  padding: .2rem .4rem;
+  padding: .2rem .5rem;
 }
-#sidebar button:hover {
-  background: #e5e5e5;
-}
+#ui button:hover { background: #e7e7e7; }
 
-/* Mapa */
-#map {
-  height: calc(100% - 82px);  /* ocupa todo menos el header */
-  width: 100%;
-}
+/* mapa */
+#map { height: calc(100% - 82px); }
 
-/* Tooltips de sectores */
-.sector-label {
-  font-weight: bold;
-  color: #333;
-}
+/* tooltip de sectores */
+.sectorTT { font-weight:bold; color:#222; }
