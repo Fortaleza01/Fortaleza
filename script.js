@@ -1,56 +1,154 @@
-const map = L.map('map').setView([7.90, -72.50], 16);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+// Coordenadas centradas en el perímetro de La Fortaleza (Cúcuta)
+const map = L.map('map').setView([7.9175, -72.497], 16);
 
-// Layer controls
-const layers = {};
-const urls = {
-  perimetro: 'data/PERIMETRO.json',
-  sectores: 'data/SECTORES.json',
-  constru: 'data/CONSTRUCCIONES.json',
-  vias: 'data/VIAS.json',
-  encuestas: 'data/ENCUESTAS.json'
-};
+// Mapa base en escala de grises
+const grayscale = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap, &copy; CartoDB'
+}).addTo(map);
 
-function loadGeo(label, styleOrPoint, popupProp) {
-  fetch(urls[label]).then(r=>r.json()).then(data=>{
-    layers[label] = L.geoJSON(data, {
-      ...(typeof styleOrPoint === 'function' ? { style: styleOrPoint } : { pointToLayer: styleOrPoint }),
-      onEachFeature: popupProp ? (f, l) => l.bindPopup(`${popupProp}: ${f.properties[popupProp]}`) : null
+// Estilos por capa
+const sectorColors = [
+  "#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231",
+  "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe",
+  "#008080", "#e6beff", "#9a6324"
+];
+
+function styleSectores(feature) {
+  return {
+    color: "#333",
+    weight: 1,
+    fillColor: sectorColors[feature.properties.COD_SECTOR % sectorColors.length],
+    fillOpacity: 0.5
+  };
+}
+
+function styleConstrucciones(feature) {
+  return {
+    color: "#ff0000",     // borde rojo
+    fillColor: "#800080", // relleno morado
+    fillOpacity: 0.6,
+    weight: 0.8
+  };
+}
+
+function styleEncuestas(feature) {
+  return {
+    radius: 7,
+    fillColor: "#ffff33", // amarillo limón
+    color: "#40e0d0",      // borde turquesa
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.9
+  };
+}
+
+function styleVias() {
+  return {
+    color: "#DAA520", // amarillo quemado
+    weight: 1.5
+  };
+}
+
+function stylePerimetro() {
+  return {
+    color: "#000",
+    weight: 2,
+    fill: false
+  };
+}
+
+// Cargar capas GeoJSON
+const capas = {};
+
+// SECTORES
+fetch('data/SECTORES.json')
+  .then(res => res.json())
+  .then(data => {
+    capas.sectores = L.geoJSON(data, {
+      style: styleSectores,
+      onEachFeature: (feature, layer) => {
+        layer.bindPopup(`<b>Sector:</b> ${feature.properties.NOMBRE}`);
+      }
     }).addTo(map);
   });
-}
 
-// Load layers
-loadGeo('perimetro', { color:'#ffdd00', weight:2, fillOpacity:0.1 });
-loadGeo('sectores', f=>({ color:'#000', fillColor: styleColor(f.properties.SECTOR), fillOpacity:0.5, weight:1 }), 'SECTOR');
-loadGeo('constru', (feature, latlng)=>L.circleMarker(latlng, { radius:4, fillColor:'#cc0000', color:'#000', weight:0.5, fillOpacity:0.7 }));
-loadGeo('vias', { color:'#f57c00', weight:2 });
-loadGeo('encuestas', (feature, latlng)=>L.circleMarker(latlng, { radius:5, fillColor:'#2a70d8', color:'#0d47a1', fillOpacity:0.9 }), 'SECTOR');
+// CONSTRUCCIONES
+fetch('data/CONSTRUCCIONES.json')
+  .then(res => res.json())
+  .then(data => {
+    capas.construcciones = L.geoJSON(data, {
+      style: styleConstrucciones
+    });
+  });
 
-// Toggle panel
-const panel = document.getElementById('panel');
-document.getElementById('togglePanel').onclick = ()=>panel.classList.toggle('open');
-document.getElementById('closePanel').onclick = ()=>panel.classList.remove('open');
+// ENCUESTAS
+fetch('data/ENCUESTAS.json')
+  .then(res => res.json())
+  .then(data => {
+    capas.encuestas = L.geoJSON(data, {
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, styleEncuestas()),
+      onEachFeature: (feature, layer) => {
+        layer.bindPopup(`<b>Encuesta:</b> ${feature.properties.ID}`);
+      }
+    });
+  });
 
-// Tab switching
-document.querySelectorAll('.tab').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tabcontent').forEach(c=>c.style.display='none');
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).style.display='block';
-  };
+// VIAS
+fetch('data/VIAS.json')
+  .then(res => res.json())
+  .then(data => {
+    capas.vias = L.geoJSON(data, {
+      style: styleVias
+    });
+  });
+
+// PERÍMETRO
+fetch('data/PERIMETRO.json')
+  .then(res => res.json())
+  .then(data => {
+    capas.perimetro = L.geoJSON(data, {
+      style: stylePerimetro
+    }).addTo(map);
+    map.fitBounds(capas.perimetro.getBounds());
+  });
+
+// Filtro de capas
+document.getElementById('toggleSectores').addEventListener('change', function () {
+  if (this.checked) {
+    capas.sectores?.addTo(map);
+  } else {
+    map.removeLayer(capas.sectores);
+  }
 });
 
-// Checkbox listeners
-['perimetro','sectores','constru','vias','encuestas'].forEach(id=>{
-  document.getElementById('ck_'+id).onchange = function(){
-    layers[id][this.checked?'addTo':'removeFrom'](map);
-  };
+document.getElementById('toggleConstrucciones').addEventListener('change', function () {
+  if (this.checked) {
+    capas.construcciones?.addTo(map);
+  } else {
+    map.removeLayer(capas.construcciones);
+  }
 });
 
-// Utility color function
-function styleColor(name) {
-  const c = { 'ALTO DEL PADRE':'#f94144','BRISAS PAZ Y FUTURO':'#f3722c','BUENA VISTA':'#fee08b', /*...*/ };
-  return c[name]||'#ccc';
-}
+document.getElementById('toggleEncuestas').addEventListener('change', function () {
+  if (this.checked) {
+    capas.encuestas?.addTo(map);
+  } else {
+    map.removeLayer(capas.encuestas);
+  }
+});
+
+document.getElementById('toggleVias').addEventListener('change', function () {
+  if (this.checked) {
+    capas.vias?.addTo(map);
+  } else {
+    map.removeLayer(capas.vias);
+  }
+});
+
+document.getElementById('togglePerimetro').addEventListener('change', function () {
+  if (this.checked) {
+    capas.perimetro?.addTo(map);
+  } else {
+    map.removeLayer(capas.perimetro);
+  }
+});

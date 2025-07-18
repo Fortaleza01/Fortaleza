@@ -1,64 +1,149 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Visor La Fortaleza</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <meta charset="utf-8" />
+  <title>Visor La Fortaleza – Construcción de Paz Urbana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    html, body, #map { height: 100%; margin: 0; font-family: Helvetica, sans-serif; }
+
+    #toolbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      z-index: 1002;
+    }
+
+    .tool-btn {
+      background: #eee;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      margin: 2px;
+      padding: 6px 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .tool-btn:hover {
+      background: #ddd;
+    }
+
+    #layerControl {
+      position: absolute;
+      top: 60px;
+      right: 10px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      z-index: 1002;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    #layerControl.hidden { display: none; }
+
+    #sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100%;
+      background: #ffffffee;
+      border-right: 1px solid #ccc;
+      padding: 20px;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+      z-index: 1001;
+      overflow-y: auto;
+    }
+
+    #toggleSidebar {
+      position: absolute;
+      top: 10px;
+      left: 290px;
+      z-index: 1003;
+      background: #ffffffdd;
+      border: 1px solid #aaa;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    #logos {
+      margin-top: 10px;
+    }
+
+    #logos img {
+      width: 80px;
+      margin: 5px;
+    }
+  </style>
 </head>
 <body>
-
-<!-- Botón panel -->
-<button id="togglePanel" title="Mostrar información">☰</button>
-
-<!-- Panel lateral -->
-<aside id="panel" class="closed">
-  <div class="tabs">
-    <button class="tab active" data-tab="creditos">Créditos</button>
-    <button class="tab" data-tab="capas">Capas</button>
-    <button class="tab" data-tab="leyenda">Leyenda</button>
-  </div>
-  <button id="closePanel" title="Cerrar panel">✕</button>
-
-  <div id="creditos" class="tabcontent">
-    <h3>Créditos</h3>
-    <p><strong>CONSTRUCCIÓN DE PAZ URBANA – LA FORTALEZA EN CÚCUTA</strong><br>
-    Territorio afectado por el conflicto armado y la inequidad social en la mujer.</p>
-    <p><strong>Proyecto Orquídea No. 109089</strong><br>
-    Ministerio de Ciencia, Tecnología e Innovación – MinCiencias<br>
-    Pontificia Universidad Javeriana</p>
-    <div class="logos">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/MinCiencias_logo.svg" alt="MinCiencias"/>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Escudo_Javeriana.svg" alt="Javeriana"/>
+  <div id="sidebar">
+    <h3>CONSTRUCCIÓN DE PAZ URBANA – LA FORTALEZA</h3>
+    <p>Territorio afectado por el conflicto armado y la inequidad social en la mujer</p>
+    <strong>PROYECTO ORQUÍDEA No. 109089</strong><br />
+    Ministerio de Ciencia, Tecnología e Innovación – MinCiencias<br />
+    <strong>Entidad ejecutora:</strong> Pontificia Universidad Javeriana
+    <div id="logos">
+      <img src="logos/logo1.png" alt="Logo 1" />
+      <img src="logos/logo2.png" alt="Logo 2" />
+      <img src="logos/logo3.png" alt="Logo 3" />
     </div>
   </div>
+  <button id="toggleSidebar">⮜</button>
 
-  <div id="capas" class="tabcontent" style="display:none;">
-    <h3>Capas visibles</h3>
-    <ul>
-      <li><input type="checkbox" id="ck_perimetro" checked> Perímetro</li>
-      <li><input type="checkbox" id="ck_sectores" checked> Sectores</li>
-      <li><input type="checkbox" id="ck_constru" checked> Construcciones</li>
-      <li><input type="checkbox" id="ck_vias" checked> Vías</li>
-      <li><input type="checkbox" id="ck_encuestas" checked> Encuestas</li>
-    </ul>
+  <div id="toolbar">
+    <button class="tool-btn" id="btn-home" title="Centrar mapa">🧭</button>
+    <button class="tool-btn" id="btn-basemap" title="Cambiar mapa base">🗺️</button>
+    <button class="tool-btn" id="btn-layers" title="Capas">📂</button>
+    <button class="tool-btn" id="btn-info" title="Información">ℹ️</button>
   </div>
 
-  <div id="leyenda" class="tabcontent" style="display:none;">
-    <h3>Leyenda</h3>
-    <ul class="legend-list">
-      <li><span class="dot" style="background:#ffdd00;"></span> Perímetro</li>
-      <li><span class="dot" style="background:#90be6d;"></span> Sectores</li>
-      <li><span class="dot" style="background:#cc0000;"></span> Construcciones</li>
-      <li><span class="dot" style="background:#f57c00;"></span> Vías</li>
-      <li><span class="dot" style="background:#2a70d8;"></span> Encuestas</li>
-    </ul>
+  <div id="layerControl" class="hidden">
+    <h4>Capas</h4>
+    <label><input type="checkbox" checked id="toggleSectores" /> Sectores</label><br />
+    <label><input type="checkbox" checked id="toggleConstrucciones" /> Construcciones</label><br />
+    <label><input type="checkbox" checked id="toggleEncuestas" /> Encuestas</label><br />
+    <label><input type="checkbox" checked id="toggleVias" /> Vías</label><br />
+    <label><input type="checkbox" checked id="togglePerimetro" /> Perímetro</label>
   </div>
-</aside>
 
-<div id="map"></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js"></script>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+  <script>
+    document.getElementById("toggleSidebar").onclick = () => {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.style.display = sidebar.style.display === "none" ? "block" : "none";
+    };
+
+    document.getElementById("btn-home").onclick = () => {
+      if (window.perimetroBounds) map.fitBounds(window.perimetroBounds);
+    };
+
+    document.getElementById("btn-basemap").onclick = () => {
+      if (map.hasLayer(grayBase)) {
+        map.removeLayer(grayBase);
+        map.addLayer(satelliteBase);
+      } else {
+        map.removeLayer(satelliteBase);
+        map.addLayer(grayBase);
+      }
+    };
+
+    document.getElementById("btn-layers").onclick = () => {
+      document.getElementById("layerControl").classList.toggle("hidden");
+    };
+  </script>
 </body>
 </html>
