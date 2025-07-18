@@ -1,45 +1,58 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Visor «La Fortaleza» – Construcción de Paz Urbana</title>
 
   <!-- Leaflet -->
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha512-xwE/HOtDtDq2v2h1XgEuB4AWuYDxw+eNPkS3F2oaVb0nR8q8nb1nP9yEG4r3FeZBLQU7lg2hGzLMKNwXg5BsQw=="
-        crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Hoja de estilos propia -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- barra superior -->
+  <header id="topbar">
+    <div class="logos">
+      <img src="LOGOS FORTALEZA.001.png" alt="Logos PUJ y Minciencias" />
+    </div>
+    <div class="titular">
+      <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
+      <h2>Proyecto Orquídea # 109089 · Minciencias · Pontificia Universidad Javeriana</h2>
+    </div>
+  </header>
 
-<header>
-  <img id="logo" src="LOGOS FORTALEZA.001.png" alt="Logos proyecto">
-  <div>
-    <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
-    <p>Proyecto Orquídea # 109089 · Minciencias · Pontificia Universidad Javeriana</p>
+  <!-- contenedor principal -->
+  <div id="app">
+    <!-- panel lateral -->
+    <aside id="panel">
+      <button id="btnToggle">&equiv;</button>
+
+      <h3>Capas</h3>
+      <label><input type="checkbox" data-layer="sectores" checked> Sectores</label>
+      <label><input type="checkbox" data-layer="vias" checked> Vías</label>
+      <label><input type="checkbox" data-layer="construcciones" checked> Construcciones</label>
+      <label><input type="checkbox" data-layer="encuestas" checked> Encuestas</label>
+
+      <hr>
+
+      <h3>Filtrar sector</h3>
+      <select id="sectorSelect">
+        <option value="">Todos los sectores</option>
+      </select>
+
+      <button id="btnCentrar">Centrar mapa</button>
+      <button id="btnBase">Cambiar mapa base</button>
+      <button id="btnInfo">ℹ️ Info</button>
+    </aside>
+
+    <!-- mapa -->
+    <div id="map"></div>
   </div>
-</header>
 
-<!-- controles -->
-<div id="ui">
-  <select id="sectorSel">
-    <option value="all">Todos los sectores</option>
-  </select>
-  <button id="homeBtn" title="Centrar mapa">🏠</button>
-  <button id="baseBtn" title="Cambiar mapa base">🗺️</button>
-  <button id="aboutBtn" title="Información">ℹ️</button>
-</div>
-
-<div id="map"></div>
-
-<!-- Leaflet -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha512-YiHi9oM0J5XJo7Q5NGB6m6cje41OQn9A5qaOqOfahrjzlXsh8mBPnN1xp72I1HKa0VrZiCdi3Wudu+3og7+MOg=="
-        crossorigin="">
-</script>
-
-<script src="script.js"></script>
+  <!-- script -->
+  <script src="script.js"></script>
 </body>
 </html>

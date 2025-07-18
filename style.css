@@ -1,51 +1,46 @@
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: Helvetica, Arial, sans-serif;
+/* ====== variables ====== */
+:root{
+  --gris-base:#f8f8f8;
+  --panel:#ffffffee;
+  --borde:#d0d0d0;
+  --fuente:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --amarillo-limon:#e5ff00;
+  --turquesa:#009fa8;
+  --morado:#8e44ad;
+  --rojo:#c0392b;
+  --amarillo-vias:#d19a00;
 }
 
-/* cabecera */
-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: .6rem 1rem;
-  background: #fff;
-  border-bottom: 1px solid #ccc;
+/* ====== layout global ====== */
+*{box-sizing:border-box;margin:0;padding:0;}
+body,html{height:100%;font-family:var(--fuente);background:var(--gris-base);}
+#app{display:flex;height:calc(100% - 96px);} /* 96 = alto del header */
+#map{flex:1;}
+header#topbar{
+  display:flex;align-items:center;gap:1rem;
+  background:#fff;border-bottom:1px solid var(--borde);
+  padding:.75rem 1rem;min-height:96px;
 }
-header h1   { font-size: 1.15rem; margin: 0 0 .25rem }
-header p    { margin: 0; font-size: .85rem; }
-#logo       { height: 54px; }
+header .logos img{height:64px;width:auto;}
+header .titular h1{font-size:1.15rem;font-weight:700;}
+header .titular h2{font-size:.85rem;font-weight:400;color:#555;}
 
-/* panel de controles */
-#ui {
-  position: absolute;
-  top: 82px;
-  left: 10px;
-  z-index: 1000;
-  background: rgba(255,255,255,.9);
-  padding: .6rem;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.16);
-  display: flex;
-  flex-direction: column;
-  gap: .4rem;
+/* ====== panel lateral ====== */
+#panel{
+  width:260px;max-width:80%;background:var(--panel);
+  border-right:1px solid var(--borde);padding:1rem;overflow-y:auto;
+  transition:transform .3s;
 }
-#ui select, #ui button {
-  font-size: .8rem;
-  font-family: inherit;
-}
-#ui button {
-  cursor: pointer;
-  border: 1px solid #888;
-  background: #f3f3f3;
-  border-radius: 4px;
-  padding: .2rem .5rem;
-}
-#ui button:hover { background: #e7e7e7; }
+#panel button{display:block;margin:.25rem 0;padding:.4rem .6rem;border:1px solid var(--borde);background:#fafafa;cursor:pointer;}
+#panel h3{margin:.75rem 0 .5rem;font-size:.9rem;}
+#panel hr{margin:1rem 0;border:none;border-top:1px dashed var(--borde);}
+#btnToggle{position:absolute;left:0;top:0;width:2.2rem;background:#eee;border:none;border-right:1px solid var(--borde);}
+#panel.closed{transform:translateX(calc(-100% + 2.2rem));}
 
-/* mapa */
-#map { height: calc(100% - 82px); }
+/* ====== Leaflet override ====== */
+.leaflet-control-layers-toggle{background:#fff;border-radius:4px;}
 
-/* tooltip de sectores */
-.sectorTT { font-weight:bold; color:#222; }
+/* ====== info popup ====== */
+.infoPopup{
+  max-width:240px;font-size:.8rem;line-height:1.2;
+}

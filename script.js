@@ -1,100 +1,94 @@
-/* ----------  mapa base  ---------- */
-const map = L.map('map', { zoomControl:false });
-const baseGray = L.tileLayer(
-  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  { attribution:'&copy; OSM & Carto', maxZoom:19 }
-).addTo(map);
-const baseColor = L.tileLayer(
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { attribution:'&copy; OpenStreetMap', maxZoom:19 }
-);
-let grayIsOn = true;
-
-/* ----------  paleta de sectores  ---------- */
-const palette = {
-  'EL PLAN'        : '#ff6666',
-  'LOS PINOS'      : '#66c2ff',
-  'EL MIRADOR'     : '#ffd966',
-  'ALTO DEL PADRE' : '#b86ef5',
-  'EL PARAISO'     : '#5cd65c',
-  'PAZ Y FUTURO'   : '#ff8c1a',
-  'SAN MIGUEL'     : '#ff66c2'
+/* ========= configuración ========== */
+const coloresSectores = {
+  "EL PLAN":      "#f94144",
+  "EL MIRADOR":   "#f3722c",
+  "LOS PINOS":    "#f9c74f",
+  "ALTO DEL PADRE":"#90be6d",
+  "EL PARAISO":   "#577590",
+  "SAN MIGUEL":   "#277da1",
+  "PAZ Y FUTURO": "#bc5090",
+  "LAS IGLESIAS": "#ff6b6b"
 };
 
-/* ----------  capas  ---------- */
-let capaPerimetro, capaSectores, cConstru, cPuntos, cVias;
+/* ========= mapa ========== */
+const mbGray = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution:"© OpenStreetMap | CARTO", maxZoom:20 });
+const mbOSM  = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",maxZoom:19});
+let currentBase = mbGray;
 
-/* carga simultánea de geojson */
+const map = L.map("map",{layers:[currentBase],zoomSnap:0.5});
+map.setView([7.9036,-72.5525],16);
+
+/* ========= capas vacías ========= */
+const gSectores      = L.geoJSON(null,   {style:estiloSector,onEachFeature:infoSector});
+const gConstrucciones= L.geoJSON(null,   {style:estiloConstruccion});
+const gVias          = L.geoJSON(null,   {style:estiloVias});
+const gEncuestas     = L.geoJSON(null,   {pointToLayer:estiloEncuesta});
+
+/* ========= carga de datos ========= */
 Promise.all([
-  fetch('SECTORES.json').then(r=>r.json()),
-  fetch('PERIMETRO.json').then(r=>r.json()),
-  fetch('CONSTRUCCIONES.json').then(r=>r.json()),
-  fetch('ENCUESTAS.json').then(r=>r.json()),
-  fetch('VIAS.json').then(r=>r.json())
-]).then(([gSectores,gPerim,gCons,gEncu,gVias]) => {
+  fetch("SECTORES.json").then(r=>r.json()),
+  fetch("CONSTRUCCIONES.json").then(r=>r.json()),
+  fetch("VIAS.json").then(r=>r.json()),
+  fetch("ENCUESTAS.json").then(r=>r.json())
+]).then(([sect,cons,via,enc])=>{
+  gSectores.addData(sect);
+  gConstrucciones.addData(cons);
+  gVias.addData(via);
+  gEncuestas.addData(enc);
 
-  capaPerimetro = L.geoJSON(gPerim,{
-    style:{color:'#007ad6',weight:3,fill:false}
-  }).addTo(map);
-  map.fitBounds(capaPerimetro.getBounds());
+  /* añadir al mapa */
+  gVias.addTo(map);
+  gSectores.addTo(map);
+  gConstrucciones.addTo(map);
+  gEncuestas.addTo(map);
 
-  /* sectores */
-  capaSectores = L.geoJSON(gSectores,{
-    style:f=>({
-      color:'#444',
-      weight:2,
-      fillColor: palette[f.properties.SECTOR]||'#ccc',
-      fillOpacity:.35
-    }),
-    onEachFeature:(f,l)=>{
-      l.bindTooltip(f.properties.SECTOR,{className:'sectorTT',direction:'center'});
-    }
-  }).addTo(map);
+  /* fit bounds al perímetro general (primera capa) */
+  map.fitBounds(gSectores.getBounds());
 
-  /* desplegable */
-  const sel = document.getElementById('sectorSel');
-  Object.keys(palette).forEach(s=>{
-    const o=document.createElement('option');
-    o.value=s; o.textContent=s; sel.appendChild(o);
+  /* poblar selector de sector */
+  const sel=document.getElementById("sectorSelect");
+  Object.keys(coloresSectores).forEach(n=>{
+    const opt=document.createElement("option");
+    opt.value=n;opt.textContent=n;sel.appendChild(opt);
   });
-  sel.onchange = e =>{
-    const val=e.target.value;
-    capaSectores.eachLayer(l=>{
-      const ok = (val==='all') || (l.feature.properties.SECTOR===val);
-      l.setStyle({opacity:ok?1:0,fillOpacity:ok?.35:0});
-    });
-  };
-
-  /* construcciones */
-  cConstru = L.geoJSON(gCons,{
-    style:{color:'#e74c3c',weight:1,fillOpacity:.7,fillColor:'#9b59b6'}
-  }).addTo(map);
-
-  /* encuestas */
-  cPuntos = L.geoJSON(gEncu,{
-    pointToLayer:(f,ll)=>
-      L.circleMarker(ll,{
-        radius:6, weight:2, color:'#2ecc71',
-        fillColor:'#fff44f', fillOpacity:.9
-      }).bindPopup(`<b>${f.properties.Name||'Encuesta'}</b><br>Sector: ${f.properties.SECTOR||'n/d'}`)
-  }).addTo(map);
-
-  /* vías */
-  cVias = L.geoJSON(gVias,{ style:{color:'#d4a017',weight:2} }).addTo(map);
 });
 
-/* ----------  botones  ---------- */
-document.getElementById('homeBtn').onclick = ()=> capaPerimetro && map.fitBounds(capaPerimetro.getBounds());
+/* ========= estilos ========= */
+function estiloSector(f){
+  const col=coloresSectores[f.properties.SECTOR]||"#999";
+  return {color:col,weight:1,fillOpacity:.15};
+}
+function estiloConstruccion(){
+  return {color:var_css("--rojo"),weight:.5,fillColor:var_css("--morado"),fillOpacity:.55};
+}
+function estiloVias(){
+  return {color:var_css("--amarillo-vias"),weight:2};
+}
+function estiloEncuesta(f,latlng){
+  return L.circleMarker(latlng,{
+    radius:7,
+    color:var_css("--turquesa"),
+    weight:1,
+    fillColor:var_css("--amarillo-limon"),
+    fillOpacity:.9
+  }).bindPopup(`<div class="infoPopup"><b>Casa #${f.properties.COD_CASA}</b><br>Sector: ${f.properties.SECTOR}<br>Tipo de pared: ${f.properties['CUAL_ES_EL']||'–'}</div>`);
+}
 
-document.getElementById('baseBtn').onclick = ()=>{
-  if(grayIsOn){ map.removeLayer(baseGray); baseColor.addTo(map); }
-  else        { map.removeLayer(baseColor); baseGray.addTo(map); }
-  grayIsOn=!grayIsOn;
+/* ========== utilidades ========== */
+function var_css(name){return getComputedStyle(document.documentElement).getPropertyValue(name);}
+
+/* ========== UI controles ========== */
+document.getElementById("btnToggle").onclick=()=>document.getElementById("panel").classList.toggle("closed");
+document.getElementById("btnCentrar").onclick=()=>map.fitBounds(gSectores.getBounds());
+document.getElementById("btnBase").onclick=()=>{
+  map.removeLayer(currentBase);
+  currentBase = currentBase===mbGray ? mbOSM : mbGray;
+  map.addLayer(currentBase);
 };
-
-document.getElementById('aboutBtn').onclick = ()=> alert(
-  'Visor «La Fortaleza»\nProyecto Orquídea #109089 – Minciencias\nPontificia Universidad Javeriana'
-);
-
-/* zoom a la derecha */
-L.control.zoom({position:'topright'}).addTo(map);
+document.getElementById("btnInfo").onclick=()=>alert("Visor experimental – versión 2025.\nDatos: Proyecto Orquídea # 109089");
+document.getElementById("sectorSelect").onchange=e=>{
+  const val=e.target.value;
+  gSectores.setStyle(s=>({opacity: val&&s.properties.SECTOR!==val ? .1:1, fillOpacity: val&&s.properties.SECTOR!==val ? .03:.15}));
+  gConstrucciones.setStyle(s=>({opacity: val&&s.properties.SECTOR!==val ? .05:1, fillOpacity: val&&s.properties.SECTOR!==val ? .03:.55}));
+  gEncuestas.eachLayer(l=>{ const ok=!val||l.feature.properties.SECTOR===val; l.setStyle({opacity:ok?1:.1,fillOpacity:ok?.9:.05});});
+};
