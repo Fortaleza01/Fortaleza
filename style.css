@@ -1,46 +1,31 @@
-/* ====== variables ====== */
-:root{
-  --gris-base:#f8f8f8;
-  --panel:#ffffffee;
-  --borde:#d0d0d0;
-  --fuente:"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --amarillo-limon:#e5ff00;
-  --turquesa:#009fa8;
-  --morado:#8e44ad;
-  --rojo:#c0392b;
-  --amarillo-vias:#d19a00;
-}
+/* ——— reset mínimo ——— */
+html,body{height:100%;margin:0;font-family:Helvetica,Arial,sans-serif;color:#111}
+/* HEADER */
+header{display:flex;align-items:center;gap:1rem;padding:.4rem .8rem;background:#fff;border-bottom:1px solid #ccc}
+header img{height:58px}
+header h1{font-size:1.1rem;margin:0}
+header h2{font-size:.8rem;font-weight:400;margin:0;color:#555}
 
-/* ====== layout global ====== */
-*{box-sizing:border-box;margin:0;padding:0;}
-body,html{height:100%;font-family:var(--fuente);background:var(--gris-base);}
-#app{display:flex;height:calc(100% - 96px);} /* 96 = alto del header */
-#map{flex:1;}
-header#topbar{
-  display:flex;align-items:center;gap:1rem;
-  background:#fff;border-bottom:1px solid var(--borde);
-  padding:.75rem 1rem;min-height:96px;
-}
-header .logos img{height:64px;width:auto;}
-header .titular h1{font-size:1.15rem;font-weight:700;}
-header .titular h2{font-size:.85rem;font-weight:400;color:#555;}
+/* SIDEBAR */
+#sidebar{position:absolute;top:105px;left:0;width:185px;background:#fafafa;border-right:1px solid #ccc;padding:.5rem;z-index:600}
+#sidebar.closed{transform:translateX(-100%);transition:.3s}
+#sidebar.open{transform:none;transition:.3s}
+#toggleSidebar{position:absolute;right:-28px;top:5px;width:28px;height:28px;border:1px solid #888;border-left:none;background:#eee;cursor:pointer}
 
-/* ====== panel lateral ====== */
-#panel{
-  width:260px;max-width:80%;background:var(--panel);
-  border-right:1px solid var(--borde);padding:1rem;overflow-y:auto;
-  transition:transform .3s;
-}
-#panel button{display:block;margin:.25rem 0;padding:.4rem .6rem;border:1px solid var(--borde);background:#fafafa;cursor:pointer;}
-#panel h3{margin:.75rem 0 .5rem;font-size:.9rem;}
-#panel hr{margin:1rem 0;border:none;border-top:1px dashed var(--borde);}
-#btnToggle{position:absolute;left:0;top:0;width:2.2rem;background:#eee;border:none;border-right:1px solid var(--borde);}
-#panel.closed{transform:translateX(calc(-100% + 2.2rem));}
+#sidebar h3{margin:.4rem 0;font-size:.85rem}
+#sidebar label, #sidebar button, #sidebar select{font-size:.8rem;margin:.15rem 0}
 
-/* ====== Leaflet override ====== */
-.leaflet-control-layers-toggle{background:#fff;border-radius:4px;}
+button{cursor:pointer;border:1px solid #888;background:#f0f0f0;padding:.25rem .4rem}
+button:hover{background:#ddd}
 
-/* ====== info popup ====== */
-.infoPopup{
-  max-width:240px;font-size:.8rem;line-height:1.2;
-}
+/* MAP */
+#map{height:calc(100% - 105px);width:100%}
+
+/* MODAL */
+.modal{display:none;position:fixed;z-index:700;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.4)}
+.modal-content{background:#fff;margin:10% auto;padding:1rem 1.4rem;border:1px solid #888;max-width:420px}
+#closeModal{cursor:pointer;float:right;font-size:1.3rem;margin-top:-.25rem}
+
+/* Leaflet tweaks */
+.leaflet-control-container .leaflet-control-zoom{margin-top:105px} /* baja los botones de zoom */
+.marker-encuesta{border:2px solid #14d2dc;border-radius:50%;background:#f9ef23;width:7px;height:7px}

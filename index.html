@@ -1,58 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Visor «La Fortaleza» – Construcción de Paz Urbana</title>
-
+  <meta charset="UTF-8">
+  <title>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Hoja de estilos propia -->
-  <link rel="stylesheet" href="style.css" />
+  <!--  Leaflet extra plugins -->
+  <script src="https://unpkg.com/leaflet.basemapswitcher/L.Control.Basemaps.js"></script>
+  <link  href="https://unpkg.com/leaflet.basemapswitcher/L.Control.Basemaps.css" rel="stylesheet"/>
+  <!--  estilos propios -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- barra superior -->
-  <header id="topbar">
-    <div class="logos">
-      <img src="LOGOS FORTALEZA.001.png" alt="Logos PUJ y Minciencias" />
-    </div>
-    <div class="titular">
-      <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
-      <h2>Proyecto Orquídea # 109089 · Minciencias · Pontificia Universidad Javeriana</h2>
-    </div>
+  <header>
+    <img src="LOGOS FORTALEZA.001.png" alt="Logos PUJ y Minciencias">
+    <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
+    <h2>Proyecto Orquídea # 109089 – Minciencias <br>Pontificia Universidad Javeriana</h2>
   </header>
 
-  <!-- contenedor principal -->
-  <div id="app">
-    <!-- panel lateral -->
-    <aside id="panel">
-      <button id="btnToggle">&equiv;</button>
+  <div id="sidebar" class="open">
+    <button id="toggleSidebar" title="Plegar panel">☰</button>
 
+    <section>
       <h3>Capas</h3>
-      <label><input type="checkbox" data-layer="sectores" checked> Sectores</label>
-      <label><input type="checkbox" data-layer="vias" checked> Vías</label>
-      <label><input type="checkbox" data-layer="construcciones" checked> Construcciones</label>
-      <label><input type="checkbox" data-layer="encuestas" checked> Encuestas</label>
+      <label><input type="checkbox" id="chkSectores" checked> Sectores</label><br>
+      <label><input type="checkbox" id="chkVias" checked> Vías</label><br>
+      <label><input type="checkbox" id="chkConstr" checked> Construcciones</label><br>
+      <label><input type="checkbox" id="chkEncuestas" checked> Encuestas</label>
+    </section>
 
-      <hr>
-
+    <section>
       <h3>Filtrar sector</h3>
-      <select id="sectorSelect">
-        <option value="">Todos los sectores</option>
+      <select id="selSector">
+        <option value="__all__">Todos los sectores</option>
       </select>
-
-      <button id="btnCentrar">Centrar mapa</button>
-      <button id="btnBase">Cambiar mapa base</button>
-      <button id="btnInfo">ℹ️ Info</button>
-    </aside>
-
-    <!-- mapa -->
-    <div id="map"></div>
+      <button id="btnCenter">Centrar mapa</button>
+      <button id="btnBase">Cambiar base</button>
+      <button id="btnInfo" title="Información">ℹ️ Info</button>
+    </section>
   </div>
 
-  <!-- script -->
+  <main id="map"></main>
+
+  <!--  modal simple -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal">&times;</span>
+      <h2>Acerca de este visor</h2>
+      <p>Proyecto “CONSTRUCCIÓN DE PAZ URBANA. La Fortaleza en Cúcuta...”<br>
+      Orquídea 109089 – Minciencias — Pontificia Universidad Javeriana.</p>
+      <p>Datos vectoriales: trabajo de levantamiento 2024-2025.<br>
+      Desarrollado con Leaflet, HTML, CSS y JavaScript.</p>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

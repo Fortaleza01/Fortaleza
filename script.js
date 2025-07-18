@@ -1,94 +1,115 @@
-/* ========= configuración ========== */
-const coloresSectores = {
-  "EL PLAN":      "#f94144",
-  "EL MIRADOR":   "#f3722c",
-  "LOS PINOS":    "#f9c74f",
-  "ALTO DEL PADRE":"#90be6d",
-  "EL PARAISO":   "#577590",
-  "SAN MIGUEL":   "#277da1",
-  "PAZ Y FUTURO": "#bc5090",
-  "LAS IGLESIAS": "#ff6b6b"
+/*  >>>  CONFIG  <<<  */
+const coloresSector = {
+  "EL PLAN"       : "#e63946",
+  "EL MIRADOR"    : "#2a9d8f",
+  "ALTO DEL PADRE": "#ffd166",
+  "LOS PINOS"     : "#118ab2",
+  "LAS IGLESIAS"  : "#ef476f",
+  "EL PARAISO"    : "#06d6a0",
+  "SAN MIGUEL"    : "#8338ec"
+};
+const basePositron =  L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  { attribution:'&copy; <a href="https://carto.com/">CARTO</a>'}
+);
+const baseOSM = L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  { attribution:'&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'}
+);
+let currentBase  = basePositron;
+
+/*  >>>  MAP INIT  <<< */
+const map = L.map("map", { zoomControl:true, layers:[currentBase] });
+/* placeholder center; will be set properly after PERIMETRO llega */
+map.setView([7.9039,-72.552],15);
+
+/* GRUPOS */
+const gSectores      = L.geoJSON(null, {
+  style: feat => ({color:"#000",weight:1,fill:true,fillOpacity:.25,
+                   fillColor: coloresSector[feat.properties.SECTOR]||"#888"}),
+  onEachFeature: (f,l)=>l.bindPopup(`<b>Sector:</b> ${f.properties.SECTOR}`)
+});
+const gConstrucciones= L.geoJSON(null,{
+  style:{color:"#e63946",weight:1,fillColor:"#8338ec",fillOpacity:.55}
+});
+const gEncuestas     = L.geoJSON(null,{
+  pointToLayer:(f,latlng)=>L.circleMarker(latlng,{
+    radius:4,weight:2,color:"#14d2dc",fillColor:"#f9ef23",fillOpacity:1
+  }).bindPopup(`<b>Encuesta #${f.properties.COD_CASA}</b><br>Sector: ${f.properties.SECTOR}`)
+});
+const gVias = L.geoJSON(null,{style:{color:"#d9a509",weight:2}});
+
+const gPerimetro = L.geoJSON(null,{
+  style:{color:"#000",weight:2,dashArray:"4 2",fill:false}
+}).on("data:loaded", e=>map.fitBounds(gPerimetro.getBounds()));
+
+/* añadir a mapa  (orden z-index) */
+gPerimetro.addTo(map);
+gVias.addTo(map);
+gConstrucciones.addTo(map);
+gSectores.addTo(map);
+gEncuestas.addTo(map);
+
+/*  >>>  FETCHEAR  <<< */
+Promise.all([
+  fetch("SECTORES.json").then(r=>r.json()).then(j=>gSectores.addData(j)),
+  fetch("CONSTRUCCIONES.json").then(r=>r.json()).then(j=>gConstrucciones.addData(j)),
+  fetch("ENCUESTAS.json").then(r=>r.json()).then(j=>gEncuestas.addData(j)),
+  fetch("VIAS.json").then(r=>r.json()).then(j=>gVias.addData(j)),
+  fetch("PERIMETRO.json").then(r=>r.json()).then(j=>gPerimetro.addData(j))
+]).then(()=>populateDrop())
+  .catch(err=>alert("Error cargando datos: "+err));
+
+/*  >>>  CONTROLES DOM  <<< */
+const chkSect   = document.getElementById("chkSectores");
+const chkVias   = document.getElementById("chkVias");
+const chkConst  = document.getElementById("chkConstr");
+const chkEnc    = document.getElementById("chkEncuestas");
+chkSect.onchange = ()=>toggleLayer(gSectores,chkSect.checked);
+chkVias.onchange = ()=>toggleLayer(gVias,chkVias.checked);
+chkConst.onchange= ()=>toggleLayer(gConstrucciones,chkConst.checked);
+chkEnc.onchange  = ()=>toggleLayer(gEncuestas,chkEnc.checked);
+
+function toggleLayer(grp,show){ show? grp.addTo(map): map.removeLayer(grp); }
+
+/*  filtro sector  */
+const selSector  = document.getElementById("selSector");
+function populateDrop(){
+  /* llena el <select> con los nombres únicos */
+  const nombres = new Set(gSectores.toGeoJSON().features.map(f=>f.properties.SECTOR));
+  nombres.forEach(n=>{
+    const opt=document.createElement("option"); opt.value=n; opt.textContent=n;
+    selSector.appendChild(opt);
+  });
+}
+selSector.onchange = ()=>{
+  const val = selSector.value;
+  gSectores.eachLayer(l=>l.setStyle({fillOpacity:(val==="__all__"||l.feature.properties.SECTOR===val)?0.25:0}));
+  gEncuestas.eachLayer(l=>{
+    const sector = l.feature.properties.SECTOR;
+    (val==="__all__"||sector===val)? l.addTo(map): map.removeLayer(l);
+  });
 };
 
-/* ========= mapa ========== */
-const mbGray = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution:"© OpenStreetMap | CARTO", maxZoom:20 });
-const mbOSM  = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",maxZoom:19});
-let currentBase = mbGray;
+/* centrar */
+document.getElementById("btnCenter").onclick = ()=>map.fitBounds(gPerimetro.getBounds());
 
-const map = L.map("map",{layers:[currentBase],zoomSnap:0.5});
-map.setView([7.9036,-72.5525],16);
-
-/* ========= capas vacías ========= */
-const gSectores      = L.geoJSON(null,   {style:estiloSector,onEachFeature:infoSector});
-const gConstrucciones= L.geoJSON(null,   {style:estiloConstruccion});
-const gVias          = L.geoJSON(null,   {style:estiloVias});
-const gEncuestas     = L.geoJSON(null,   {pointToLayer:estiloEncuesta});
-
-/* ========= carga de datos ========= */
-Promise.all([
-  fetch("SECTORES.json").then(r=>r.json()),
-  fetch("CONSTRUCCIONES.json").then(r=>r.json()),
-  fetch("VIAS.json").then(r=>r.json()),
-  fetch("ENCUESTAS.json").then(r=>r.json())
-]).then(([sect,cons,via,enc])=>{
-  gSectores.addData(sect);
-  gConstrucciones.addData(cons);
-  gVias.addData(via);
-  gEncuestas.addData(enc);
-
-  /* añadir al mapa */
-  gVias.addTo(map);
-  gSectores.addTo(map);
-  gConstrucciones.addTo(map);
-  gEncuestas.addTo(map);
-
-  /* fit bounds al perímetro general (primera capa) */
-  map.fitBounds(gSectores.getBounds());
-
-  /* poblar selector de sector */
-  const sel=document.getElementById("sectorSelect");
-  Object.keys(coloresSectores).forEach(n=>{
-    const opt=document.createElement("option");
-    opt.value=n;opt.textContent=n;sel.appendChild(opt);
-  });
-});
-
-/* ========= estilos ========= */
-function estiloSector(f){
-  const col=coloresSectores[f.properties.SECTOR]||"#999";
-  return {color:col,weight:1,fillOpacity:.15};
-}
-function estiloConstruccion(){
-  return {color:var_css("--rojo"),weight:.5,fillColor:var_css("--morado"),fillOpacity:.55};
-}
-function estiloVias(){
-  return {color:var_css("--amarillo-vias"),weight:2};
-}
-function estiloEncuesta(f,latlng){
-  return L.circleMarker(latlng,{
-    radius:7,
-    color:var_css("--turquesa"),
-    weight:1,
-    fillColor:var_css("--amarillo-limon"),
-    fillOpacity:.9
-  }).bindPopup(`<div class="infoPopup"><b>Casa #${f.properties.COD_CASA}</b><br>Sector: ${f.properties.SECTOR}<br>Tipo de pared: ${f.properties['CUAL_ES_EL']||'–'}</div>`);
-}
-
-/* ========== utilidades ========== */
-function var_css(name){return getComputedStyle(document.documentElement).getPropertyValue(name);}
-
-/* ========== UI controles ========== */
-document.getElementById("btnToggle").onclick=()=>document.getElementById("panel").classList.toggle("closed");
-document.getElementById("btnCentrar").onclick=()=>map.fitBounds(gSectores.getBounds());
-document.getElementById("btnBase").onclick=()=>{
+/* cambiar base */
+document.getElementById("btnBase").onclick = ()=>{
   map.removeLayer(currentBase);
-  currentBase = currentBase===mbGray ? mbOSM : mbGray;
+  currentBase = (currentBase===basePositron)? baseOSM: basePositron;
   map.addLayer(currentBase);
 };
-document.getElementById("btnInfo").onclick=()=>alert("Visor experimental – versión 2025.\nDatos: Proyecto Orquídea # 109089");
-document.getElementById("sectorSelect").onchange=e=>{
-  const val=e.target.value;
-  gSectores.setStyle(s=>({opacity: val&&s.properties.SECTOR!==val ? .1:1, fillOpacity: val&&s.properties.SECTOR!==val ? .03:.15}));
-  gConstrucciones.setStyle(s=>({opacity: val&&s.properties.SECTOR!==val ? .05:1, fillOpacity: val&&s.properties.SECTOR!==val ? .03:.55}));
-  gEncuestas.eachLayer(l=>{ const ok=!val||l.feature.properties.SECTOR===val; l.setStyle({opacity:ok?1:.1,fillOpacity:ok?.9:.05});});
+
+/* info modal */
+const modal = document.getElementById("infoModal");
+document.getElementById("btnInfo").onclick = ()=>modal.style.display="block";
+document.getElementById("closeModal").onclick = ()=>modal.style.display="none";
+window.addEventListener("click",e=>{if(e.target===modal) modal.style.display="none"});
+
+/* sidebar toggle */
+const sidebar = document.getElementById("sidebar");
+document.getElementById("toggleSidebar").onclick = ()=>{
+  sidebar.classList.toggle("closed");
+  sidebar.classList.toggle("open");
 };
