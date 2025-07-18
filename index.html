@@ -2,22 +2,37 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Fortaleza</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Visor Territorial – La Fortaleza</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+
+  <!-- Panel de filtro -->
   <div id="filtro">
     <label for="sectorSelect">Filtrar por sector:</label>
     <select id="sectorSelect">
-      <option value="TODOS">TODOS</option>
+      <option value="TODOS">Todos los sectores</option>
+      <option value="ALTO DEL PADRE">Alto del Padre</option>
+      <option value="BRISAS PAZ Y FUTURO">Brisas Paz y Futuro</option>
+      <option value="BUENA VISTA">Buena Vista</option>
+      <option value="BUENA VISTA PARCELA">Buena Vista Parcela</option>
+      <option value="EL MIRADOR">El Mirador</option>
+      <option value="EL PARAISO">El Paraíso</option>
+      <option value="EL PLAN">El Plan</option>
+      <option value="LA ESCUELA">La Escuela</option>
+      <option value="LAS IGLESIAS">Las Iglesias</option>
+      <option value="LOS PINOS">Los Pinos</option>
+      <option value="SAN MIGUEL">San Miguel</option>
     </select>
   </div>
 
+  <!-- Contenedor del mapa -->
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
