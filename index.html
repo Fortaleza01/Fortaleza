@@ -2,54 +2,32 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Visor Territorial - La Fortaleza</title>
+  <title>Visor La Fortaleza</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="icon" href="img/logo-puj.png" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 </head>
 <body>
-  <div id="map"></div>
 
-  <!-- Panel lateral -->
-  <div id="sidePanel">
-    <div class="panel-header">
-      <h3>Visor Territorial</h3>
-      <button id="closePanel">✕</button>
-    </div>
-    <div class="panel-content">
-      <h4>Créditos</h4>
-      <p><strong>CONSTRUCCIÓN DE PAZ URBANA</strong><br>
-      LA FORTALEZA EN CÚCUTA – TERRITORIO AFECTADO POR EL CONFLICTO ARMADO Y LA INEQUIDAD SOCIAL EN LA MUJER</p>
-      <p><strong>Proyecto Orquídea Nº 109089</strong><br>
-      <strong>Financia:</strong> Ministerio de Ciencia, Tecnología e Innovación – MINCIENCIAS<br>
-      <strong>Entidad Ejecutora:</strong> Pontificia Universidad Javeriana</p>
-
-      <hr>
-
-      <h4>Capas</h4>
-      <label><input type="checkbox" id="toggleSectores" checked> Sectores</label><br>
-      <label><input type="checkbox" id="toggleConstrucciones" checked> Construcciones</label><br>
-      <label><input type="checkbox" id="toggleEncuestas" checked> Encuestas</label><br>
-      <label><input type="checkbox" id="toggleVias" checked> Vías</label><br>
-      <label><input type="checkbox" id="togglePerimetro" checked> Perímetro</label>
-
-      <hr>
-
-      <h4>Simbología</h4>
-      <ul class="legend-list">
-        <li><span class="legend-box" style="background:#ffcc00;"></span> Sectores</li>
-        <li><span class="legend-box" style="background:#d7191c;"></span> Construcciones</li>
-        <li><span class="legend-box" style="background:#2b83ba;"></span> Encuestas</li>
-        <li><span class="legend-box" style="background:#1a9641;"></span> Vías</li>
-      </ul>
-    </div>
+<div id="panel">
+  <div id="panel-header">
+    <h2>CONSTRUCCIÓN DE PAZ URBANA <br><small>La Fortaleza – Cúcuta</small></h2>
+    <button onclick="cerrarPanel()">✕</button>
   </div>
+  <div id="panel-body">
+    <p><strong>Proyecto Orquídea No. 109089</strong><br>
+    Territorio afectado por el conflicto armado y la inequidad social en la mujer.</p>
+    <p><strong>Financia:</strong> Ministerio de Ciencia, Tecnología e Innovación – Minciencias</p>
+    <p><strong>Entidad ejecutora:</strong> Pontificia Universidad Javeriana</p>
+    <p><strong>Aliado técnico:</strong> Lab Site Arquitectura</p>
+  </div>
+</div>
 
-  <!-- Botón de apertura -->
-  <button id="openPanel">☰</button>
+<button id="toggle" onclick="togglePanel()">☰ Información</button>
 
-  <!-- Leaflet y Script -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="script.js"></script>
+<div id="map"></div>
+
+<script src="script.js"></script>
 </body>
 </html>
