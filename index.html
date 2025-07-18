@@ -3,69 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Visor La Fortaleza</title>
+  <title>Visor Territorial - La Fortaleza</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
+  <div id="map"></div>
 
   <!-- Panel lateral -->
-  <div id="sidebar">
-    <h2>Visor La Fortaleza</h2>
-    <div class="tabs">
-      <button class="tablink active" onclick="openTab('inicio')">Inicio</button>
-      <button class="tablink" onclick="openTab('capas')">Capas</button>
-      <button class="tablink" onclick="openTab('creditos')">Créditos</button>
+  <div id="sidePanel">
+    <div class="panel-header">
+      <h3>Visor Territorial</h3>
+      <button id="closePanel">✕</button>
     </div>
+    <div class="panel-content">
+      <h4>Créditos</h4>
+      <p><strong>CONSTRUCCIÓN DE PAZ URBANA</strong><br>
+      LA FORTALEZA EN CÚCUTA – TERRITORIO AFECTADO POR EL CONFLICTO ARMADO Y LA INEQUIDAD SOCIAL EN LA MUJER</p>
+      <p><strong>Proyecto Orquídea Nº 109089</strong><br>
+      <strong>Financia:</strong> Ministerio de Ciencia, Tecnología e Innovación – MINCIENCIAS<br>
+      <strong>Entidad Ejecutora:</strong> Pontificia Universidad Javeriana</p>
 
-    <div id="inicio" class="tabcontent" style="display:block;">
-      <p><strong>Este visor interactivo</strong> permite visualizar las condiciones territoriales del sector informal <strong>La Fortaleza</strong> en Cúcuta.</p>
-      <p>Utiliza las pestañas para explorar capas temáticas y filtrar por sectores.</p>
-    </div>
+      <hr>
 
-    <div id="capas" class="tabcontent">
-      <label for="sectorSelect"><strong>Filtrar por sector:</strong></label>
-      <select id="sectorSelect">
-        <option value="TODOS">Todos los sectores</option>
-        <option value="ALTO DEL PADRE">ALTO DEL PADRE</option>
-        <option value="BRISAS PAZ Y FUTURO">BRISAS PAZ Y FUTURO</option>
-        <option value="BUENA VISTA">BUENA VISTA</option>
-        <option value="BUENA VISTA PARCELA">BUENA VISTA PARCELA</option>
-        <option value="EL MIRADOR">EL MIRADOR</option>
-        <option value="EL PARAISO">EL PARAISO</option>
-        <option value="EL PLAN">EL PLAN</option>
-        <option value="LA ESCUELA">LA ESCUELA</option>
-        <option value="LAS IGLESIAS">LAS IGLESIAS</option>
-        <option value="LOS PINOS">LOS PINOS</option>
-        <option value="SAN MIGUEL">SAN MIGUEL</option>
-      </select>
-    </div>
+      <h4>Capas</h4>
+      <label><input type="checkbox" id="toggleSectores" checked> Sectores</label><br>
+      <label><input type="checkbox" id="toggleConstrucciones" checked> Construcciones</label><br>
+      <label><input type="checkbox" id="toggleEncuestas" checked> Encuestas</label><br>
+      <label><input type="checkbox" id="toggleVias" checked> Vías</label><br>
+      <label><input type="checkbox" id="togglePerimetro" checked> Perímetro</label>
 
-    <div id="creditos" class="tabcontent">
-      <p><strong>Proyecto desarrollado por:</strong></p>
-      <ul>
-        <li>Lab Site Arquitectura</li>
-        <li>Municipio de Cúcuta</li>
-        <li>Visor experimental 2025</li>
+      <hr>
+
+      <h4>Simbología</h4>
+      <ul class="legend-list">
+        <li><span class="legend-box" style="background:#ffcc00;"></span> Sectores</li>
+        <li><span class="legend-box" style="background:#d7191c;"></span> Construcciones</li>
+        <li><span class="legend-box" style="background:#2b83ba;"></span> Encuestas</li>
+        <li><span class="legend-box" style="background:#1a9641;"></span> Vías</li>
       </ul>
     </div>
   </div>
 
-  <!-- Mapa -->
-  <div id="map"></div>
+  <!-- Botón de apertura -->
+  <button id="openPanel">☰</button>
 
-  <!-- Script principal -->
+  <!-- Leaflet y Script -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="script.js"></script>
-
-  <!-- Script para pestañas -->
-  <script>
-    function openTab(tabId) {
-      document.querySelectorAll('.tabcontent').forEach(tab => tab.style.display = 'none');
-      document.querySelectorAll('.tablink').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tabId).style.display = 'block';
-      event.currentTarget.classList.add('active');
-    }
-  </script>
 </body>
 </html>
