@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Visor Territorial La Fortaleza</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Visor Territorial – La Fortaleza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Hoja de estilos propia -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Panel lateral -->
   <div id="sidebar">
     <h2>Visor Territorial</h2>
-    <p><strong>La Fortaleza - Cúcuta</strong></p>
-
-    <h3>Temas</h3>
-    <label><input type="checkbox" id="chkSectores" checked /> Sectores</label>
-    <label><input type="checkbox" id="chkPerimetro" checked /> Perímetro</label>
-    <label><input type="checkbox" id="chkVias" checked /> Vías</label>
-    <label><input type="checkbox" id="chkConstrucciones" checked /> Construcciones</label>
-    <label><input type="checkbox" id="chkEncuestas" checked /> Encuestas</label>
-
-    <h3>Filtrar por sector</h3>
+    <h4>Sector La Fortaleza – Cúcuta</h4>
+    <label for="sectorSelect"><strong>Filtrar por sector:</strong></label>
     <select id="sectorSelect">
-      <option value="">Todos</option>
+      <option value="TODOS">Todos los sectores</option>
       <option value="ALTO DEL PADRE">ALTO DEL PADRE</option>
       <option value="BRISAS PAZ Y FUTURO">BRISAS PAZ Y FUTURO</option>
       <option value="BUENA VISTA">BUENA VISTA</option>
@@ -33,11 +30,16 @@
       <option value="LOS PINOS">LOS PINOS</option>
       <option value="SAN MIGUEL">SAN MIGUEL</option>
     </select>
+    <hr>
+    <p><small>Desarrollado por <strong>Lab Site Arquitectura</strong></small></p>
   </div>
 
+  <!-- Mapa -->
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Script personalizado -->
   <script src="script.js"></script>
 </body>
 </html>
