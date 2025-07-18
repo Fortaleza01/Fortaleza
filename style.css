@@ -1,98 +1,119 @@
-/* Estilo general */
-body, html {
-  height: 100%;
+/*────────  GLOBAL  ────────*/
+html, body {
   margin: 0;
-  font-family: Helvetica, sans-serif;
+  height: 100%;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
-/* Contenedor del mapa */
 #map {
-  height: 100%;
+  height: calc(100% - 150px);  /* deja espacio para cabecera + toolbar */
   width: 100%;
-  z-index: 0;
 }
 
-/* Panel lateral fijo */
-#panel {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 280px;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  padding: 1rem;
-  overflow-y: auto;
-  transition: left 0.3s ease;
-}
-
-#panel h2 {
-  font-size: 18px;
-  margin-top: 0;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 8px;
-}
-
-#panel label {
-  display: block;
-  margin: 10px 0;
-  cursor: pointer;
-}
-
-input[type="checkbox"] {
-  margin-right: 6px;
-}
-
-/* Botón para ocultar panel */
-#togglePanelBtn {
-  position: absolute;
-  top: 15px;
-  left: 290px;
-  background-color: #333;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 0 5px 5px 0;
-  cursor: pointer;
-  z-index: 1100;
-  font-size: 14px;
-  transition: left 0.3s ease;
-}
-
-#togglePanelBtn:hover {
-  background-color: #555;
-}
-
-/* Créditos */
-#credits {
-  position: absolute;
-  bottom: 10px;
-  left: 15px;
-  font-size: 12px;
-  color: #444;
-  max-width: 260px;
-  line-height: 1.4;
-}
-
-/* Logos */
-#logos {
+/*────────  CABECERA  ────────*/
+header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: #eeeeee;
 }
 
-#logos img {
-  height: 40px;
-  max-width: 100px;
+header img {
+  height: 72px;
   object-fit: contain;
 }
 
-/* Panel oculto */
-#panel.hidden {
-  left: -300px;
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 
-#togglePanelBtn.collapsed {
-  left: 0;
+header h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/*────────  TOOLBAR  ────────*/
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: #ffffffee;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#toolbar select,
+#toolbar button {
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #fff;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+#toolbar button:hover {
+  background: #f0f0f0;
+}
+
+/*────────  LEYENDA  ────────*/
+.sector-label {
+  font-size: 0.7rem;
+  color: #222;
+  font-weight: 600;
+  text-shadow: 0 0 3px #ffffff;
+}
+
+.info.legend {
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  line-height: 18px;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.info.legend i {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  border: 1px solid #0003;
+}
+
+/*────────  PANEL INFO  ────────*/
+#infoPanel {
+  position: absolute;
+  top: 90px;
+  right: 20px;
+  width: 300px;
+  max-width: 90vw;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  padding: 16px;
+  z-index: 1001;
+}
+
+#infoPanel.hidden { display: none; }
+
+#infoPanel #closeInfo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/*────────  MEDIA  ────────*/
+@media (max-width: 600px) {
+  header { flex-direction: column; align-items: flex-start; }
+  #map   { height: calc(100% - 200px); }
 }

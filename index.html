@@ -2,148 +2,63 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Visor La Fortaleza – Construcción de Paz Urbana</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visor «La Fortaleza» – Construcción de Paz Urbana</title>
   <link
     rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-o2RZbE4yYv7v6kgrJ5q2UcF3UPx2PaS34nk39C0h1z8="
+    crossorigin=""
   />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    html, body, #map { height: 100%; margin: 0; font-family: Helvetica, sans-serif; }
-
-    #toolbar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.9);
-      padding: 8px;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      z-index: 1002;
-    }
-
-    .tool-btn {
-      background: #eee;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-      margin: 2px;
-      padding: 6px 10px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .tool-btn:hover {
-      background: #ddd;
-    }
-
-    #layerControl {
-      position: absolute;
-      top: 60px;
-      right: 10px;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 10px;
-      z-index: 1002;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    #layerControl.hidden { display: none; }
-
-    #sidebar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 280px;
-      height: 100%;
-      background: #ffffffee;
-      border-right: 1px solid #ccc;
-      padding: 20px;
-      box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-      z-index: 1001;
-      overflow-y: auto;
-    }
-
-    #toggleSidebar {
-      position: absolute;
-      top: 10px;
-      left: 290px;
-      z-index: 1003;
-      background: #ffffffdd;
-      border: 1px solid #aaa;
-      padding: 4px 8px;
-      cursor: pointer;
-    }
-
-    #logos {
-      margin-top: 10px;
-    }
-
-    #logos img {
-      width: 80px;
-      margin: 5px;
-    }
-  </style>
 </head>
 <body>
-  <div id="sidebar">
-    <h3>CONSTRUCCIÓN DE PAZ URBANA – LA FORTALEZA</h3>
-    <p>Territorio afectado por el conflicto armado y la inequidad social en la mujer</p>
-    <strong>PROYECTO ORQUÍDEA No. 109089</strong><br />
-    Ministerio de Ciencia, Tecnología e Innovación – MinCiencias<br />
-    <strong>Entidad ejecutora:</strong> Pontificia Universidad Javeriana
-    <div id="logos">
-      <img src="logos/logo1.png" alt="Logo 1" />
-      <img src="logos/logo2.png" alt="Logo 2" />
-      <img src="logos/logo3.png" alt="Logo 3" />
-    </div>
-  </div>
-  <button id="toggleSidebar">⮜</button>
+  <!-- ─────────────  CABECERA  ───────────── -->
+  <header>
+    <img src="img/LOGOS_FORTALEZA.001.png" alt="Logos del proyecto" />
+    <h1>CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)</h1>
+    <h2>
+      Proyecto Orquídea # 109089 – Minciencias<br />
+      Pontificia Universidad Javeriana
+    </h2>
+  </header>
 
-  <div id="toolbar">
-    <button class="tool-btn" id="btn-home" title="Centrar mapa">🧭</button>
-    <button class="tool-btn" id="btn-basemap" title="Cambiar mapa base">🗺️</button>
-    <button class="tool-btn" id="btn-layers" title="Capas">📂</button>
-    <button class="tool-btn" id="btn-info" title="Información">ℹ️</button>
-  </div>
+  <!-- ─────────────  BARRA DE HERRAMIENTAS  ───────────── -->
+  <nav id="toolbar">
+    <select id="sectorSelect">
+      <option value="TODOS">Todos los sectores</option>
+    </select>
 
-  <div id="layerControl" class="hidden">
-    <h4>Capas</h4>
-    <label><input type="checkbox" checked id="toggleSectores" /> Sectores</label><br />
-    <label><input type="checkbox" checked id="toggleConstrucciones" /> Construcciones</label><br />
-    <label><input type="checkbox" checked id="toggleEncuestas" /> Encuestas</label><br />
-    <label><input type="checkbox" checked id="toggleVias" /> Vías</label><br />
-    <label><input type="checkbox" checked id="togglePerimetro" /> Perímetro</label>
-  </div>
+    <button id="btnHome"   title="Centrar en asentamiento">⌂</button>
+    <button id="btnBasemap" title="Cambiar mapa base">🗺️</button>
+    <button id="btnInfo"   title="Información">ℹ️</button>
+  </nav>
 
+  <!-- ─────────────  MAPA  ───────────── -->
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <!-- ─────────────  PANEL INFO/CRÉDITOS  ───────────── -->
+  <aside id="infoPanel" class="hidden">
+    <button id="closeInfo">✕</button>
+    <h3>Créditos</h3>
+    <p>
+      <strong>CONSTRUCCIÓN DE PAZ URBANA. LA FORTALEZA EN CÚCUTA</strong><br />
+      Territorio afectado por el conflicto armado y la inequidad social en la mujer.<br /><br />
+
+      <em>Proyecto Orquídea Nº 109089</em><br />
+      Ministerio de Ciencia, Tecnología e Innovación – Minciencias<br />
+      <strong>Entidad ejecutora:</strong> Pontificia Universidad Javeriana<br /><br />
+
+      Visor experimental&nbsp;2025.<br />
+      Desarrollado por Lab Site Arquitectura &amp; Municipio de Cúcuta.
+    </p>
+  </aside>
+
+  <!-- ─────────────  SCRIPTS  ───────────── -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j5mZiPeLMpQ6pPCDtYU3pr/uWzmkVwY2xRymwWY="
+    crossorigin=""
+  ></script>
   <script src="script.js"></script>
-  <script>
-    document.getElementById("toggleSidebar").onclick = () => {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.style.display = sidebar.style.display === "none" ? "block" : "none";
-    };
-
-    document.getElementById("btn-home").onclick = () => {
-      if (window.perimetroBounds) map.fitBounds(window.perimetroBounds);
-    };
-
-    document.getElementById("btn-basemap").onclick = () => {
-      if (map.hasLayer(grayBase)) {
-        map.removeLayer(grayBase);
-        map.addLayer(satelliteBase);
-      } else {
-        map.removeLayer(satelliteBase);
-        map.addLayer(grayBase);
-      }
-    };
-
-    document.getElementById("btn-layers").onclick = () => {
-      document.getElementById("layerControl").classList.toggle("hidden");
-    };
-  </script>
 </body>
 </html>
