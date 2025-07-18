@@ -1,161 +1,144 @@
-/*────────────────  PARÁMETROS  ────────────────*/
-const PALETTE = [
-  "#ff6b6b","#f4a261","#ffd166","#06d6a0",
-  "#4cc9f0","#4361ee","#8338ec","#ffbe0b",
-  "#43aa8b","#f72585","#8d99ae","#ef476f"
-];
+/* ----------  Configuración general  ---------- */
+const map = L.map('map', { zoomControl: false });   // movemos zoom a la derecha
+const grayBase = L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  { attribution: '&copy; OSM | &copy; Carto', maxZoom: 19 }
+);
+const colorBase = L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }
+);
+grayBase.addTo(map);  // base por defecto
+let currentBase = 'gray';   // estado para el botón
 
-const COLOR_VIAS  = "#d68c00";
-const FILL_CONSTR = "#7e3ff2";
-const STROKE_CONSTR = "#e63946";
-const COLOR_PTS   = "#fff200";
-const STROKE_PTS  = "#00c2c7";
-
-const DATA = {
-  perimetro : "data/PERIMETRO.json",
-  sectores  : "data/SECTORES.json",
-  vias      : "data/VIAS.json",
-  construcciones : "data/CONSTRUCCIONES.json",
-  encuestas : "data/ENCUESTAS.json"
+/* ----------  Colores por sector  ---------- */
+const sectorColors = {
+  'EL PLAN'        : '#ff6666',
+  'LOS PINOS'      : '#66c2ff',
+  'EL MIRADOR'     : '#ffd966',
+  'ALTO DEL PADRE' : '#b86ef5',
+  'EL PARAISO'     : '#5cd65c',
+  'PAZ Y FUTURO'   : '#ff8c1a',
+  'SAN MIGUEL'     : '#ff66c2'
 };
 
-/*────────────────  MAPA & BASEMAPS  ────────────*/
-const baseGris = L.tileLayer(
-  "https://stamen-tiles.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.png",
-  { maxZoom: 20, attribution: "© Stamen & OSM" }
-);
+/* ----------  Capas globales  ---------- */
+let sectorLayer, construLayer, encuestasLayer, viasLayer, perimetroLayer;
 
-const baseColor = L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  { maxZoom: 20, attribution: "© OpenStreetMap" }
-);
+/* ----------  Cargar GeoJSONs  ---------- */
+Promise.all([
+  fetch('SECTORES.json').then(r => r.json()),
+  fetch('CONSTRUCCIONES.json').then(r => r.json()),
+  fetch('ENCUESTAS.json').then(r => r.json()),
+  fetch('VIAS.json').then(r => r.json()),
+  fetch('PERIMETRO.json').then(r => r.json())
+]).then(loadLayers)
+  .catch(err => console.error('Error cargando archivos GeoJSON:', err));
 
-const map = L.map("map", {
-  zoomControl: false,
-  attributionControl: false,
-  layers: [baseGris]
-}).setView([7.9022, -72.5490], 16);
+function loadLayers([sectores, construcciones, encuestas, vias, perimetro]) {
 
-L.control.zoom({ position: "bottomleft" }).addTo(map);
-L.control.attribution({ position: "bottomright", prefix: false }).addAttribution("© OpenStreetMap");
+  /* PERÍMETRO – para fitBounds y referencia */
+  perimetroLayer = L.geoJSON(perimetro, {
+    style: {
+      color: '#0099e6',
+      weight: 3,
+      fill: false
+    }
+  }).addTo(map);
 
-/*────────────────  CAPAS VACÍAS  ───────────────*/
-const gPerim  = L.geoJSON(null).addTo(map);
-const gSect   = L.geoJSON(null).addTo(map);
-const gVias   = L.geoJSON(null).addTo(map);
-const gConstr = L.geoJSON(null).addTo(map);
-const gPts    = L.geoJSON(null).addTo(map);
+  map.fitBounds(perimetroLayer.getBounds());
 
-/* Leyenda estática (excepto Sectores, que se autocompleta abajo) */
-const legend = L.control({ position: "bottomright" });
-legend.onAdd = () => {
-  const div = L.DomUtil.create("div", "info legend");
-  div.id = "leyenda";
-  div.innerHTML = `
-    <strong>Simbología</strong><br>
-    <i style="background:${COLOR_VIAS}"></i> Vías<br>
-    <i style="background:${FILL_CONSTR};border-color:${STROKE_CONSTR}"></i> Construcciones<br>
-    <i style="background:${COLOR_PTS};border-color:${STROKE_PTS}"></i> Encuestas<br>
-    <i style="background:#000"></i> Perímetro<br>
-    <div id="leyendaSectores"></div>
-  `;
-  return div;
+  /* SECTORES */
+  sectorLayer = L.geoJSON(sectores, {
+    style: feat => ({
+      color      : '#333',
+      weight     : 2,
+      fillColor  : sectorColors[feat.properties.SECTOR] || '#cccccc',
+      fillOpacity: 0.35
+    }),
+    onEachFeature: (feat, layer) => {
+      const nombre = feat.properties.SECTOR;
+      layer.bindTooltip(nombre, { className: 'sector-label', direction: 'center' });
+    }
+  }).addTo(map);
+
+  /* Popular el selector */
+  const select = document.getElementById('sectorSelect');
+  Object.keys(sectorColors).forEach(sec => {
+    const opt = document.createElement('option');
+    opt.value = sec;
+    opt.textContent = sec;
+    select.appendChild(opt);
+  });
+
+  /* CONSTRUCCIONES */
+  construLayer = L.geoJSON(construcciones, {
+    style: {
+      color: '#e74c3c',
+      weight: 1,
+      fillColor: '#9b59b6',
+      fillOpacity: 0.7
+    }
+  }).addTo(map);
+
+  /* ENCUESTAS – puntos */
+  encuestasLayer = L.geoJSON(encuestas, {
+    pointToLayer: (feat, latlng) =>
+      L.circleMarker(latlng, {
+        radius       : 7,
+        color        : '#1abc9c',
+        weight       : 2,
+        fillColor    : '#fff44f',
+        fillOpacity  : 0.9
+      })
+      .bindPopup(`
+        <strong>${feat.properties.Name || 'Encuesta'}</strong><br>
+        Sector: ${feat.properties.SECTOR || 'n/d'}
+      `)
+  }).addTo(map);
+
+  /* VÍAS */
+  viasLayer = L.geoJSON(vias, {
+    style: {
+      color: '#d4a017',
+      weight: 2
+    }
+  }).addTo(map);
+
+  /* Evento del selector */
+  select.addEventListener('change', e => {
+    const val = e.target.value;
+    sectorLayer.eachLayer(l => {
+      const visible = (val === 'todos') || (l.feature.properties.SECTOR === val);
+      l.setStyle({ opacity: visible ? 1 : 0, fillOpacity: visible ? 0.35 : 0 });
+    });
+  });
+}
+
+/* ----------  Controles personalizados  ---------- */
+document.getElementById('homeBtn').onclick = () => {
+  if (perimetroLayer) map.fitBounds(perimetroLayer.getBounds());
 };
-legend.addTo(map);
 
-/*────────────────  CARGA DE GEOJSON  ───────────*/
-Promise.all(
-  Object.values(DATA).map(u => fetch(u).then(r => r.json()))
-).then(([perim, sect, vias, constr, enc]) => {
-  /* Perímetro */
-  gPerim.addData(perim).setStyle({ color:"#000", weight:2, fillOpacity:0 });
-
-  /* Sectores – color/label dinámico */
-  const colorBySector = {};
-  const leyendaSect = document.getElementById("leyendaSectores");
-  sect.features.forEach((f,i) => {
-    const nom = f.properties.SECTOR || f.properties.NOMBRESECT;
-    const col = PALETTE[i % PALETTE.length];
-    colorBySector[nom] = col;
-    leyendaSect.innerHTML += `<i style="background:${col}"></i>${nom}<br>`;
-    document.getElementById("sectorSelect").innerHTML += `<option>${nom}</option>`;
-  });
-
-  gSect.addData(sect).eachLayer(l => {
-    const nom = l.feature.properties.SECTOR || l.feature.properties.NOMBRESECT;
-    l.setStyle({ color:colorBySector[nom], fillColor:colorBySector[nom], weight:1, fillOpacity:0.25 });
-    L.marker(l.getBounds().getCenter(), {
-      icon: L.divIcon({ className:"sector-label", html: nom, iconSize:[80,20] }),
-      interactive:false
-    }).addTo(map);
-  });
-
-  /* Vías */
-  gVias.addData(vias).setStyle({ color:COLOR_VIAS, weight:2 });
-
-  /* Construcciones */
-  gConstr.addData(constr).setStyle({
-    color:STROKE_CONSTR, fillColor:FILL_CONSTR, weight:.8, fillOpacity:.65
-  });
-
-  /* Encuestas */
-  gPts.addData(enc, {
-    pointToLayer: (_,latlng)=>L.circleMarker(latlng,{
-      radius:7, color:STROKE_PTS, weight:1,
-      fillColor:COLOR_PTS, fillOpacity:.95
-    })
-  });
-
-  /* Centrar mapa */
-  map.fitBounds(gPerim.getBounds());
-});
-
-/*────────────────  FILTRA POR SECTOR  ──────────*/
-document.getElementById("sectorSelect").addEventListener("change", e=>{
-  const sel = e.target.value;
-
-  /* Sectores visibles o atenuados */
-  gSect.eachLayer(l=>{
-    const nom = l.feature.properties.SECTOR || l.feature.properties.NOMBRESECT;
-    const on = sel==="TODOS"||nom===sel;
-    l.setStyle({ fillOpacity:on?0.25:0, opacity:on?1:0 });
-  });
-
-  /* Construcciones y Encuestas – recarga filtrada */
-  ["construcciones","encuestas"].forEach(k=>{
-    fetch(DATA[k]).then(r=>r.json()).then(gj=>{
-      const sub = sel==="TODOS" ? gj.features :
-        gj.features.filter(f=>f.properties.SECTOR===sel);
-      k==="construcciones" ? gConstr.clearLayers().addData({...gj,features:sub}).setStyle({
-        color:STROKE_CONSTR, fillColor:FILL_CONSTR, weight:.8, fillOpacity:.65})
-      : gPts.clearLayers().addData({...gj,features:sub},{
-          pointToLayer:(_,latlng)=>L.circleMarker(latlng,{
-            radius:7,color:STROKE_PTS,weight:1,fillColor:COLOR_PTS,fillOpacity:.95})
-        });
-    });
-  });
-
-  /* Zoom automático */
-  if(sel==="TODOS") map.fitBounds(gPerim.getBounds());
-  else {
-    const lyr=gSect.getLayers().find(l=>{
-      const nom=l.feature.properties.SECTOR||l.feature.properties.NOMBRESECT;
-      return nom===sel;
-    });
-    if(lyr) map.fitBounds(lyr.getBounds());
+document.getElementById('basemapBtn').onclick = () => {
+  if (currentBase === 'gray') {
+    map.removeLayer(grayBase);
+    colorBase.addTo(map);
+    currentBase = 'color';
+  } else {
+    map.removeLayer(colorBase);
+    grayBase.addTo(map);
+    currentBase = 'gray';
   }
-});
-
-/*────────────────  BOTONES TOOLBAR  ────────────*/
-document.getElementById("btnHome").onclick = ()=> map.fitBounds(gPerim.getBounds());
-
-let grisActivo = true;
-document.getElementById("btnBasemap").onclick = ()=>{
-  grisActivo ? map.removeLayer(baseGris).addLayer(baseColor)
-             : map.removeLayer(baseColor).addLayer(baseGris);
-  grisActivo = !grisActivo;
 };
 
-const info = document.getElementById("infoPanel");
-document.getElementById("btnInfo").onclick   = ()=> info.classList.toggle("hidden");
-document.getElementById("closeInfo").onclick = ()=> info.classList.add("hidden");
+document.getElementById('infoBtn').onclick = () => {
+  alert(
+    'CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza\n' +
+    'Proyecto Orquídea # 109089, Minciencias\n' +
+    'Pontificia Universidad Javeriana'
+  );
+};
+
+/* Mover control de zoom a la derecha */
+L.control.zoom({ position: 'topright' }).addTo(map);

@@ -1,119 +1,75 @@
-/*────────  GLOBAL  ────────*/
+/* Fuente y reset básico */
 html, body {
-  margin: 0;
   height: 100%;
+  margin: 0;
   font-family: Helvetica, Arial, sans-serif;
 }
 
-#map {
-  height: calc(100% - 150px);  /* deja espacio para cabecera + toolbar */
-  width: 100%;
-}
-
-/*────────  CABECERA  ────────*/
+/* Cabecera */
 header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
-  background: #eeeeee;
+  gap: 1rem;
+  padding: .5rem 1rem;
+  background: #ffffff;
+  border-bottom: 1px solid #ddd;
 }
 
-header img {
-  height: 72px;
+#logos {
+  height: 60px;
   object-fit: contain;
 }
 
-header h1 {
-  margin: 0;
+#titulos h1 {
+  margin: .1rem 0 .2rem;
   font-size: 1.2rem;
-  font-weight: 700;
 }
-
-header h2 {
+#titulos p {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 400;
-  line-height: 1.2;
+  font-size: .9rem;
 }
 
-/*────────  TOOLBAR  ────────*/
-#toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
-  background: #ffffffee;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#toolbar select,
-#toolbar button {
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  background: #fff;
-  padding: 4px 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-#toolbar button:hover {
-  background: #f0f0f0;
-}
-
-/*────────  LEYENDA  ────────*/
-.sector-label {
-  font-size: 0.7rem;
-  color: #222;
-  font-weight: 600;
-  text-shadow: 0 0 3px #ffffff;
-}
-
-.info.legend {
-  background: #fff;
-  padding: 8px 10px;
+/* Sidebar de controles */
+#sidebar {
+  position: absolute;
+  top: 80px;           /* debajo del header */
+  left: .5rem;
+  z-index: 1000;
+  background: rgba(255,255,255,.9);
+  padding: .7rem .6rem;
   border-radius: 6px;
-  line-height: 18px;
-  font-size: 0.8rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  font-size: .82rem;
 }
 
-.info.legend i {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-right: 6px;
-  border: 1px solid #0003;
+#sidebar select,
+#sidebar button {
+  font-family: inherit;
+  font-size: .82rem;
 }
 
-/*────────  PANEL INFO  ────────*/
-#infoPanel {
-  position: absolute;
-  top: 90px;
-  right: 20px;
-  width: 300px;
-  max-width: 90vw;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  padding: 16px;
-  z-index: 1001;
-}
-
-#infoPanel.hidden { display: none; }
-
-#infoPanel #closeInfo {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: transparent;
-  border: none;
-  font-size: 1.2rem;
+#sidebar button {
   cursor: pointer;
+  border: 1px solid #888;
+  background: #f4f4f4;
+  border-radius: 4px;
+  padding: .2rem .4rem;
+}
+#sidebar button:hover {
+  background: #e5e5e5;
 }
 
-/*────────  MEDIA  ────────*/
-@media (max-width: 600px) {
-  header { flex-direction: column; align-items: flex-start; }
-  #map   { height: calc(100% - 200px); }
+/* Mapa */
+#map {
+  height: calc(100% - 82px);  /* ocupa todo menos el header */
+  width: 100%;
+}
+
+/* Tooltips de sectores */
+.sector-label {
+  font-weight: bold;
+  color: #333;
 }
