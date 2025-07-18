@@ -2,43 +2,69 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Visor La Fortaleza</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="shortcut icon" href="LOGOS FORTALEZA.001.png" type="image/png" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    defer
-  ></script>
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+
   <header>
-    <img src="LOGOS FORTALEZA.001.png" alt="Logos institucionales" />
-    <button id="toggle-panel">☰</button>
+    <img src="LOGOS FORTALEZA.001.png" alt="Logos Institucionales" class="logos-header" />
   </header>
 
   <div id="map"></div>
 
-  <aside id="side-panel" class="open">
-    <h2>Capas</h2>
-    <label><input type="checkbox" id="toggle-sectores" checked /> Sectores</label>
-    <label><input type="checkbox" id="toggle-vias" checked /> Vías</label>
-    <label><input type="checkbox" id="toggle-construcciones" checked /> Construcciones</label>
-    <label><input type="checkbox" id="toggle-encuestas" checked /> Encuestas</label>
+  <div id="sidebar">
+    <button id="toggle-panel">☰</button>
+    <h3>Capas</h3>
+    <label><input type="checkbox" id="encuestas" checked /> Encuestas</label><br/>
+    <label><input type="checkbox" id="vias" checked /> Vías</label><br/>
+    <label><input type="checkbox" id="construcciones" checked /> Construcciones</label><br/>
+    <label><input type="checkbox" id="sectores" checked /> Sectores</label><br/>
 
-    <h2>Herramientas</h2>
-    <button id="center-map">Centrar mapa</button>
-    <button id="switch-basemap">Cambiar mapa base</button>
+    <hr/>
 
-    <h2>Filtrar por sector</h2>
-    <select id="sector-filter">
-      <option value="">— Mostrar todos —</option>
+    <h3>Filtros</h3>
+    <label for="sectorSelect">Filtrar sector:</label>
+    <select id="sectorSelect">
+      <option value="Todos">Todos</option>
     </select>
-  </aside>
+
+    <hr/>
+
+    <h3>Herramientas</h3>
+    <button id="resetView">Centrar mapa</button><br/>
+    <button id="toggleBase">Cambiar mapa base</button><br/>
+    <button id="infoBtn">Info</button>
+  </div>
+
+  <div id="stats">
+    <strong>Estadísticas:</strong><br/>
+    Sectores: <span id="stat-sectores">0</span><br/>
+    Construcciones: <span id="stat-construcciones">0</span><br/>
+    Encuestas: <span id="stat-encuestas">0</span>
+  </div>
+
+  <div id="legend">
+    <strong>Leyenda sectores</strong><br/>
+    <ul id="legend-list"></ul>
+  </div>
+
+  <div id="credits">
+    PUJ / Minciencias – 2025<br/>
+    Proyecto “Construcción de Paz Urbana – La Fortaleza (Cúcuta)”
+  </div>
+
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <h2>Proyecto La Fortaleza</h2>
+      <p>Este visor forma parte del proyecto “Construcción de Paz Urbana – La Fortaleza (Cúcuta)”, una iniciativa conjunta entre la Pontificia Universidad Javeriana y Minciencias para caracterizar territorial y socialmente los asentamientos informales.</p>
+      <button id="closeInfo">Cerrar</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
