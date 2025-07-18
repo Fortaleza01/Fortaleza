@@ -3,31 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <title>Visor La Fortaleza</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="img/logo-puj.png" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
 <body>
 
-<div id="panel">
-  <div id="panel-header">
-    <h2>CONSTRUCCIÓN DE PAZ URBANA <br><small>La Fortaleza – Cúcuta</small></h2>
-    <button onclick="cerrarPanel()">✕</button>
-  </div>
-  <div id="panel-body">
-    <p><strong>Proyecto Orquídea No. 109089</strong><br>
-    Territorio afectado por el conflicto armado y la inequidad social en la mujer.</p>
-    <p><strong>Financia:</strong> Ministerio de Ciencia, Tecnología e Innovación – Minciencias</p>
-    <p><strong>Entidad ejecutora:</strong> Pontificia Universidad Javeriana</p>
-    <p><strong>Aliado técnico:</strong> Lab Site Arquitectura</p>
-  </div>
-</div>
+<!-- Botón panel -->
+<button id="togglePanel" title="Mostrar información">☰</button>
 
-<button id="toggle" onclick="togglePanel()">☰ Información</button>
+<!-- Panel lateral -->
+<aside id="panel" class="closed">
+  <div class="tabs">
+    <button class="tab active" data-tab="creditos">Créditos</button>
+    <button class="tab" data-tab="capas">Capas</button>
+    <button class="tab" data-tab="leyenda">Leyenda</button>
+  </div>
+  <button id="closePanel" title="Cerrar panel">✕</button>
+
+  <div id="creditos" class="tabcontent">
+    <h3>Créditos</h3>
+    <p><strong>CONSTRUCCIÓN DE PAZ URBANA – LA FORTALEZA EN CÚCUTA</strong><br>
+    Territorio afectado por el conflicto armado y la inequidad social en la mujer.</p>
+    <p><strong>Proyecto Orquídea No. 109089</strong><br>
+    Ministerio de Ciencia, Tecnología e Innovación – MinCiencias<br>
+    Pontificia Universidad Javeriana</p>
+    <div class="logos">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/MinCiencias_logo.svg" alt="MinCiencias"/>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Escudo_Javeriana.svg" alt="Javeriana"/>
+    </div>
+  </div>
+
+  <div id="capas" class="tabcontent" style="display:none;">
+    <h3>Capas visibles</h3>
+    <ul>
+      <li><input type="checkbox" id="ck_perimetro" checked> Perímetro</li>
+      <li><input type="checkbox" id="ck_sectores" checked> Sectores</li>
+      <li><input type="checkbox" id="ck_constru" checked> Construcciones</li>
+      <li><input type="checkbox" id="ck_vias" checked> Vías</li>
+      <li><input type="checkbox" id="ck_encuestas" checked> Encuestas</li>
+    </ul>
+  </div>
+
+  <div id="leyenda" class="tabcontent" style="display:none;">
+    <h3>Leyenda</h3>
+    <ul class="legend-list">
+      <li><span class="dot" style="background:#ffdd00;"></span> Perímetro</li>
+      <li><span class="dot" style="background:#90be6d;"></span> Sectores</li>
+      <li><span class="dot" style="background:#cc0000;"></span> Construcciones</li>
+      <li><span class="dot" style="background:#f57c00;"></span> Vías</li>
+      <li><span class="dot" style="background:#2a70d8;"></span> Encuestas</li>
+    </ul>
+  </div>
+</aside>
 
 <div id="map"></div>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

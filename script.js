@@ -1,87 +1,56 @@
-// Inicializar el mapa centrado en La Fortaleza
-const mapa = L.map('map').setView([7.9089, -72.5026], 16);
+const map = L.map('map').setView([7.90, -72.50], 16);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// Fondo base
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(mapa);
+// Layer controls
+const layers = {};
+const urls = {
+  perimetro: 'data/PERIMETRO.json',
+  sectores: 'data/SECTORES.json',
+  constru: 'data/CONSTRUCCIONES.json',
+  vias: 'data/VIAS.json',
+  encuestas: 'data/ENCUESTAS.json'
+};
 
-// Colores únicos por sector
-function colorPorSector(nombre) {
-  const colores = {
-    "ALTO DEL PADRE": "#d73027",
-    "BRISAS PAZ Y FUTURO": "#fc8d59",
-    "BUENA VISTA": "#fee08b",
-    "BUENA VISTA PARCELA": "#d9ef8b",
-    "EL MIRADOR": "#91cf60",
-    "EL PARAISO": "#66bd63",
-    "EL PLAN": "#1a9850",
-    "LA ESCUELA": "#a6d96a",
-    "LAS IGLESIAS": "#3288bd",
-    "LOS PINOS": "#5e4fa2",
-    "SAN MIGUEL": "#a6cee3"
+function loadGeo(label, styleOrPoint, popupProp) {
+  fetch(urls[label]).then(r=>r.json()).then(data=>{
+    layers[label] = L.geoJSON(data, {
+      ...(typeof styleOrPoint === 'function' ? { style: styleOrPoint } : { pointToLayer: styleOrPoint }),
+      onEachFeature: popupProp ? (f, l) => l.bindPopup(`${popupProp}: ${f.properties[popupProp]}`) : null
+    }).addTo(map);
+  });
+}
+
+// Load layers
+loadGeo('perimetro', { color:'#ffdd00', weight:2, fillOpacity:0.1 });
+loadGeo('sectores', f=>({ color:'#000', fillColor: styleColor(f.properties.SECTOR), fillOpacity:0.5, weight:1 }), 'SECTOR');
+loadGeo('constru', (feature, latlng)=>L.circleMarker(latlng, { radius:4, fillColor:'#cc0000', color:'#000', weight:0.5, fillOpacity:0.7 }));
+loadGeo('vias', { color:'#f57c00', weight:2 });
+loadGeo('encuestas', (feature, latlng)=>L.circleMarker(latlng, { radius:5, fillColor:'#2a70d8', color:'#0d47a1', fillOpacity:0.9 }), 'SECTOR');
+
+// Toggle panel
+const panel = document.getElementById('panel');
+document.getElementById('togglePanel').onclick = ()=>panel.classList.toggle('open');
+document.getElementById('closePanel').onclick = ()=>panel.classList.remove('open');
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabcontent').forEach(c=>c.style.display='none');
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).style.display='block';
   };
-  return colores[nombre] || "#cccccc";
-}
-
-// Función para agregar capas
-function agregarCapa(url, estilo, popupCampo) {
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      L.geoJSON(data, {
-        style: estilo,
-        pointToLayer: (feature, latlng) => {
-          return L.circleMarker(latlng, estilo);
-        },
-        onEachFeature: (feature, layer) => {
-          if (popupCampo && feature.properties[popupCampo]) {
-            layer.bindPopup(`<strong>${popupCampo}:</strong> ${feature.properties[popupCampo]}`);
-          }
-        }
-      }).addTo(mapa);
-    });
-}
-
-// Cargar capas
-agregarCapa('data/SECTORES.json', f => ({
-  color: colorPorSector(f.properties.NOMBRESECT || ''),
-  weight: 2,
-  fillOpacity: 0.4
-}), "NOMBRESECT");
-
-agregarCapa('data/CONSTRUCCIONES.json', {
-  radius: 2,
-  fillColor: "#000000",
-  color: "#000",
-  weight: 0.3,
-  opacity: 0.5,
-  fillOpacity: 0.6
 });
 
-agregarCapa('data/VIAS.json', {
-  color: "#f57c00",
-  weight: 1
+// Checkbox listeners
+['perimetro','sectores','constru','vias','encuestas'].forEach(id=>{
+  document.getElementById('ck_'+id).onchange = function(){
+    layers[id][this.checked?'addTo':'removeFrom'](map);
+  };
 });
 
-agregarCapa('data/ENCUESTAS.json', {
-  radius: 3,
-  fillColor: "#2a70d8",
-  color: "#0d47a1",
-  weight: 0.4,
-  fillOpacity: 0.9
-}, "SECTOR");
-
-agregarCapa('data/PERIMETRO.json', {
-  color: "#000000",
-  weight: 2,
-  dashArray: '4'
-});
-
-// Panel lateral
-function togglePanel() {
-  document.getElementById('panel').classList.toggle('visible');
-}
-function cerrarPanel() {
-  document.getElementById('panel').classList.remove('visible');
+// Utility color function
+function styleColor(name) {
+  const c = { 'ALTO DEL PADRE':'#f94144','BRISAS PAZ Y FUTURO':'#f3722c','BUENA VISTA':'#fee08b', /*...*/ };
+  return c[name]||'#ccc';
 }
