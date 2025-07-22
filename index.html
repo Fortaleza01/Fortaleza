@@ -1,70 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
   <title>Visor La Fortaleza</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Evitar cache dura en GitHub Pages -->
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <link rel="stylesheet" href="style.css?v=20250718" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="script.js?v=20250718" defer></script>
 </head>
 <body>
-
+  <!-- LOGOS -->
   <header>
     <img src="LOGOS FORTALEZA.001.png" alt="Logos Institucionales" class="logos-header" />
   </header>
 
-  <div id="map"></div>
+  <!-- MAPA -->
+  <div id="map" role="region" aria-label="Mapa interactivo de La Fortaleza"></div>
 
-  <div id="sidebar">
-    <button id="toggle-panel">☰</button>
-    <h3>Capas</h3>
-    <label><input type="checkbox" id="encuestas" checked /> Encuestas</label><br/>
-    <label><input type="checkbox" id="vias" checked /> Vías</label><br/>
-    <label><input type="checkbox" id="construcciones" checked /> Construcciones</label><br/>
-    <label><input type="checkbox" id="sectores" checked /> Sectores</label><br/>
+  <!-- PANEL LATERAL -->
+  <nav id="sidebar" aria-label="Controles del visor">
+    <button id="toggle-panel" aria-expanded="true" aria-controls="sidebar">☰</button>
 
-    <hr/>
+    <div id="sidebar-content">
+      <h3>Capas</h3>
+      <!-- Orden solicitado: Encuestas, Vías, Construcciones, Sectores -->
+      <label><input type="checkbox" id="cap-encuestas" checked /> Encuestas</label>
+      <label><input type="checkbox" id="cap-vias" checked /> Vías</label>
+      <label><input type="checkbox" id="cap-construcciones" checked /> Construcciones</label>
+      <label><input type="checkbox" id="cap-sectores" checked /> Sectores</label>
 
-    <h3>Filtros</h3>
-    <label for="sectorSelect">Filtrar sector:</label>
-    <select id="sectorSelect">
-      <option value="Todos">Todos</option>
-    </select>
+      <hr />
 
-    <hr/>
+      <h3>Filtrar por sector</h3>
+      <select id="sector-filter">
+        <option value="">— Mostrar todos —</option>
+      </select>
 
-    <h3>Herramientas</h3>
-    <button id="resetView">Centrar mapa</button><br/>
-    <button id="toggleBase">Cambiar mapa base</button><br/>
-    <button id="infoBtn">Info</button>
+      <hr />
+
+      <h3>Herramientas</h3>
+      <button id="center-map">Centrar mapa</button>
+      <button id="switch-basemap">Cambiar mapa base</button>
+      <button id="info-button">Info</button>
+    </div>
+  </nav>
+
+  <!-- ESTADÍSTICAS -->
+  <div id="stats" role="status" aria-live="polite">
+    Cargando estadísticas...
   </div>
 
-  <div id="stats">
-    <strong>Estadísticas:</strong><br/>
-    Sectores: <span id="stat-sectores">0</span><br/>
-    Construcciones: <span id="stat-construcciones">0</span><br/>
-    Encuestas: <span id="stat-encuestas">0</span>
-  </div>
-
-  <div id="legend">
-    <strong>Leyenda sectores</strong><br/>
+  <!-- LEYENDA DE SECTORES -->
+  <div id="legend" aria-label="Leyenda de sectores">
+    <strong>Leyenda sectores</strong>
     <ul id="legend-list"></ul>
   </div>
 
-  <div id="credits">
-    PUJ / Minciencias – 2025<br/>
-    Proyecto “Construcción de Paz Urbana – La Fortaleza (Cúcuta)”
-  </div>
+  <!-- CRÉDITOS -->
+ <footer id="credits">
+  CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)<br />
+  Proyecto académico de investigación – PUJ | Minciencias – 2025
+</footer>
 
-  <div id="infoModal" class="modal">
+  <!-- MODAL INFO -->
+  <div id="info-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="info-title">
     <div class="modal-content">
-      <h2>Proyecto La Fortaleza</h2>
-      <p>Este visor forma parte del proyecto “Construcción de Paz Urbana – La Fortaleza (Cúcuta)”, una iniciativa conjunta entre la Pontificia Universidad Javeriana y Minciencias para caracterizar territorial y socialmente los asentamientos informales.</p>
-      <button id="closeInfo">Cerrar</button>
+      <h2 id="info-title">Proyecto La Fortaleza</h2>
+      <p>
+        Este visor forma parte del proyecto “Construcción de Paz Urbana – La Fortaleza (Cúcuta)”, una iniciativa conjunta entre la Pontificia Universidad Javeriana y Minciencias para la caracterización territorial y social de asentamientos informales.
+      </p>
+      <button id="close-info">Cerrar</button>
     </div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>

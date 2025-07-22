@@ -1,216 +1,334 @@
-const map = L.map('map').setView([7.905, -72.505], 15);
+/* script.js - Visor La Fortaleza */
 
-const base1 = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; CartoDB'
-}).addTo(map);
+/* ---------- Utilidades ---------- */
 
-const base2 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+// Normaliza nombre de sector (mayúsculas, recorta espacios)
+function norm(str){
+  return (str || "").toString().trim().toUpperCase();
+}
 
-let currentBase = 1;
+// Wait util
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// Referencias de capas
-const capas = {
-  sectores: null,
-  construcciones: null,
-  encuestas: null,
-  vias: null,
-  perimetro: null,
+/* ---------- Inicialización ---------- */
+
+let map;
+let basePositron, baseOSM, currentBase = "positron";
+let panes = {};
+let layers = {
+  sectores:null,
+  construcciones:null,
+  vias:null,
+  encuestas:null,
+  perimetro:null
 };
+let sectorColors = {};          // {SECTOR_NORM: "#hex"}
+let sectorNameDisplay = {};     // {SECTOR_NORM: "Nombre original"}
+let sectorCenters = {};         // {SECTOR_NORM: LatLng}
+let allConstrucciones = [];     // raw features
+let allEncuestas = [];          // raw features
+let totalSectores = 0;
 
-const colores = {};
-const sectorLabels = {};
-const palette = ['#f72585', '#b5179e', '#7209b7', '#560bad', '#480ca8', '#3a0ca3', '#3f37c9', '#4361ee', '#4895ef', '#4cc9f0', '#00b4d8', '#48cae4', '#90e0ef'];
+document.addEventListener("DOMContentLoaded", init);
 
-function getColor(sector) {
-  if (!colores[sector]) {
-    colores[sector] = palette[Object.keys(colores).length % palette.length];
-  }
-  return colores[sector];
+/* ---------- Init Map ---------- */
+async function init(){
+  map = L.map("map", {zoomControl:true});
+
+  // Base maps
+  basePositron = L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    {attribution:"&copy; CartoDB"}
+  ).addTo(map);
+
+  baseOSM = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {attribution:"&copy; OpenStreetMap"}
+  );
+
+  // Custom panes for z-order (higher zIndex on top)
+  panes.sectores        = map.createPane("sectoresPane");        panes.sectores.style.zIndex = 200;
+  panes.construcciones  = map.createPane("construccionesPane");  panes.construcciones.style.zIndex = 300;
+  panes.vias            = map.createPane("viasPane");            panes.vias.style.zIndex = 400;
+  panes.encuestas       = map.createPane("encuestasPane");       panes.encuestas.style.zIndex = 500;
+  panes.perimetro       = map.createPane("perimetroPane");       panes.perimetro.style.zIndex = 600; // outline over everything
+
+  await loadAllData();
+
+  wireUI();
+  updateStatsGlobal();
+  buildLegend(); // after sectorColors assigned
 }
 
-function loadGeojson(url, callback) {
-  fetch(url).then(res => res.json()).then(data => callback(data));
-}
+/* ---------- Load Data ---------- */
+async function loadAllData(){
+  const [perimetro, sectores, construcciones, encuestas, vias] = await Promise.all([
+    fetch("data/PERIMETRO.json").then(r=>r.json()),
+    fetch("data/SECTORES.json").then(r=>r.json()),
+    fetch("data/CONSTRUCCIONES.json").then(r=>r.json()),
+    fetch("data/ENCUESTAS.json").then(r=>r.json()),
+    fetch("data/VIAS.geojson").then(r=>r.json())
+  ]);
 
-// Cargar capas
-loadGeojson('data/PERIMETRO.json', data => {
-  capas.perimetro = L.geoJSON(data, {
-    style: { color: '#000', weight: 2, fillOpacity: 0 }
+  // Perímetro
+  layers.perimetro = L.geoJSON(perimetro,{
+    pane:"perimetroPane",
+    style:{color:"#000",weight:2,fillOpacity:0}
   }).addTo(map);
-  map.fitBounds(capas.perimetro.getBounds());
-});
+  map.fitBounds(layers.perimetro.getBounds());
 
-loadGeojson('data/SECTORES.json', data => {
-  const nombres = new Set();
-  capas.sectores = L.geoJSON(data, {
-    style: f => ({
-      color: '#000',
-      weight: 1,
-      fillColor: getColor(f.properties.SECTOR),
-      fillOpacity: 0.6
-    }),
-    onEachFeature: (f, layer) => {
-      const nombre = f.properties.SECTOR;
-      nombres.add(nombre);
+  // Sectores (bottom)
+  const palette = ["#f94144","#f3722c","#f8961e","#f9c74f","#90be6d","#43aa8b","#577590","#9d4edd","#ffb703","#6a994e","#ef476f","#118ab2","#de3c4b","#ffb4a2"];
+  let colorIdx=0;
 
-      layer.on('click', () => {
-        map.fitBounds(layer.getBounds());
-        document.getElementById('sectorSelect').value = nombre;
-        filterBySector(nombre);
+  layers.sectores = L.geoJSON(sectores,{
+    pane:"sectoresPane",
+    style:f=>{
+      const rawName = f.properties.SECTOR || f.properties.NOMBRESECT || "SIN NOMBRE";
+      const key = norm(rawName);
+      if(!sectorColors[key]){
+        sectorColors[key] = palette[colorIdx % palette.length];
+        sectorNameDisplay[key] = rawName;
+        colorIdx++;
+      }
+      return {
+        color:"#333",
+        weight:1,
+        fillColor:sectorColors[key],
+        fillOpacity:0.6
+      };
+    },
+    onEachFeature:(f,layer)=>{
+      const rawName = f.properties.SECTOR || f.properties.NOMBRESECT || "SIN NOMBRE";
+      const key = norm(rawName);
+      // Centroid / center for label & legend click
+      const ctr = layer.getBounds().getCenter();
+      sectorCenters[key] = ctr;
+      // Label permanent
+      layer.bindTooltip(rawName,{
+        permanent:true,
+        direction:"center",
+        className:"sector-label"
       });
+      // Click focus + select in filter
+      layer.on("click",()=>{
+        map.fitBounds(layer.getBounds());
+        const sel = document.getElementById("sector-filter");
+        sel.value = rawName;
+        applySectorFilter(rawName);
+      });
+    }
+  }).addTo(map);
+  totalSectores = Object.keys(sectorColors).length;
 
-      const center = layer.getBounds().getCenter();
-      sectorLabels[nombre] = L.marker(center, {
-        icon: L.divIcon({
-          className: 'sector-label',
-          html: `<b>${nombre}</b>`,
-          iconSize: [100, 20]
-        })
-      }).addTo(map);
+  // Construcciones
+  allConstrucciones = construcciones.features;
+  layers.construcciones = L.geoJSON(construcciones,{
+    pane:"construccionesPane",
+    style:{
+      color:"#e63946",
+      weight:1,
+      fillColor:"#8338ec",
+      fillOpacity:0.7
     }
   }).addTo(map);
 
-  // Agregar al selector
-  const sel = document.getElementById('sectorSelect');
-  [...nombres].sort().forEach(n => {
-    const opt = document.createElement('option');
-    opt.value = n;
-    opt.text = n;
-    sel.appendChild(opt);
-  });
-
-  document.getElementById('stat-sectores').textContent = nombres.size;
-});
-
-loadGeojson('data/CONSTRUCCIONES.json', data => {
-  capas.construcciones = L.geoJSON(data, {
-    style: {
-      color: '#e63946',
-      weight: 1,
-      fillColor: '#8338ec',
-      fillOpacity: 0.7
-    }
+  // Vías
+  layers.vias = L.geoJSON(vias,{
+    pane:"viasPane",
+    style:{color:"#d9a509",weight:2}
   }).addTo(map);
-  document.getElementById('stat-construcciones').textContent = data.features.length;
-});
 
-loadGeojson('data/ENCUESTAS.json', data => {
-  capas.encuestas = L.geoJSON(data, {
-    pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-      radius: 7,
-      color: '#14d2dc',
-      weight: 2,
-      fillColor: '#f9ef23',
-      fillOpacity: 1
+  // Encuestas
+  allEncuestas = encuestas.features;
+  layers.encuestas = L.geoJSON(encuestas,{
+    pane:"encuestasPane",
+    pointToLayer:(f,latlng)=>L.circleMarker(latlng,{
+      radius:7,
+      fillColor:"#f9ef23",
+      color:"#14d2dc",
+      weight:2,
+      fillOpacity:1
     })
   }).addTo(map);
-  document.getElementById('stat-encuestas').textContent = data.features.length;
-});
 
-loadGeojson('data/VIAS.geojson', data => {
-  capas.vias = L.geoJSON(data, {
-    style: {
-      color: '#d9a509',
-      weight: 2
+  // Poblar selector de sectores
+  const sel = document.getElementById("sector-filter");
+  Object.values(sectorNameDisplay)
+    .sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}))
+    .forEach(name=>{
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+}
+
+/* ---------- UI Events ---------- */
+function wireUI(){
+  // Panel plegable
+  const sidebar = document.getElementById("sidebar");
+  const btn = document.getElementById("toggle-panel");
+  btn.addEventListener("click",()=>{
+    const closed = sidebar.classList.toggle("closed");
+    btn.setAttribute("aria-expanded",!closed);
+  });
+
+  // Botones
+  document.getElementById("center-map").onclick = ()=>{
+    if(layers.perimetro) map.fitBounds(layers.perimetro.getBounds());
+  };
+
+  document.getElementById("switch-basemap").onclick = ()=>{
+    if(currentBase==="positron"){
+      map.removeLayer(basePositron);
+      baseOSM.addTo(map);
+      currentBase="osm";
+    }else{
+      map.removeLayer(baseOSM);
+      basePositron.addTo(map);
+      currentBase="positron";
     }
-  }).addTo(map);
-});
+  };
 
-// Controles
-document.getElementById('sectores').onchange = e => toggleLayer(capas.sectores, e.target.checked, sectorLabels);
-document.getElementById('construcciones').onchange = e => toggleLayer(capas.construcciones, e.target.checked);
-document.getElementById('encuestas').onchange = e => toggleLayer(capas.encuestas, e.target.checked);
-document.getElementById('vias').onchange = e => toggleLayer(capas.vias, e.target.checked);
+  // Modal Info
+  document.getElementById("info-button").onclick = ()=>document.getElementById("info-modal").classList.remove("hidden");
+  document.getElementById("close-info").onclick = ()=>document.getElementById("info-modal").classList.add("hidden");
 
-document.getElementById('resetView').onclick = () => {
-  if (capas.perimetro) map.fitBounds(capas.perimetro.getBounds());
-};
-
-document.getElementById('toggleBase').onclick = () => {
-  if (currentBase === 1) {
-    map.removeLayer(base1);
-    base2.addTo(map);
-    currentBase = 2;
-  } else {
-    map.removeLayer(base2);
-    base1.addTo(map);
-    currentBase = 1;
-  }
-};
-
-document.getElementById('sectorSelect').onchange = e => {
-  filterBySector(e.target.value);
-};
-
-function toggleLayer(layer, visible, labels = null) {
-  if (!layer) return;
-  if (visible) {
-    map.addLayer(layer);
-    if (labels) Object.values(labels).forEach(l => l.addTo(map));
-  } else {
-    map.removeLayer(layer);
-    if (labels) Object.values(labels).forEach(l => map.removeLayer(l));
-  }
-}
-
-function filterBySector(nombre) {
-  if (nombre === 'Todos') {
-    capas.construcciones?.eachLayer(l => l.setStyle({ opacity: 1, fillOpacity: 0.7 }));
-    capas.encuestas?.eachLayer(l => l.setStyle({ opacity: 1, fillOpacity: 1 }));
-    capas.sectores?.eachLayer(l => l.setStyle({ fillOpacity: 0.6 }));
-    return;
-  }
-
-  capas.construcciones?.eachLayer(l => {
-    const inside = capas.sectores?.getLayers().some(s => s.feature.properties.SECTOR === nombre && s.getBounds().contains(l.getBounds().getCenter()));
-    l.setStyle({ opacity: inside ? 1 : 0.1, fillOpacity: inside ? 0.7 : 0.1 });
-  });
-
-  capas.encuestas?.eachLayer(l => {
-    const inside = l.feature.properties.SECTOR === nombre;
-    l.setStyle({ opacity: inside ? 1 : 0.1, fillOpacity: inside ? 1 : 0.1 });
-  });
-
-  capas.sectores?.eachLayer(l => {
-    l.setStyle({ fillOpacity: l.feature.properties.SECTOR === nombre ? 0.6 : 0.1 });
-  });
-}
-
-// Modal
-document.getElementById('infoBtn').onclick = () => {
-  document.getElementById('infoModal').style.display = 'block';
-};
-document.getElementById('closeInfo').onclick = () => {
-  document.getElementById('infoModal').style.display = 'none';
-};
-// Agregar leyenda visual para sectores
-function buildLegend() {
-  const legend = document.getElementById('legend-list');
-  legend.innerHTML = '';
-  Object.entries(colores).forEach(([nombre, color]) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span style="background:${color}"></span>${nombre}`;
-    legend.appendChild(li);
-  });
-}
-
-setTimeout(buildLegend, 2000);  // Esperar carga de sectores
-function buildLegend() {
-  const legend = document.getElementById('legend-list');
-  legend.innerHTML = '';
-  Object.entries(colores).forEach(([nombre, color]) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span style="background:${color}"></span>${nombre}`;
-    li.style.cursor = 'pointer';
-    li.onclick = () => {
-      geojsonSectores.eachLayer(layer => {
-        if (layer.feature.properties.NOMBRESECT === nombre) {
-          map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+  // Checkboxes (order: encuestas, vias, construcciones, sectores)
+  document.getElementById("cap-encuestas").onchange = e=>toggleLayer(layers.encuestas,e.target.checked);
+  document.getElementById("cap-vias").onchange = e=>toggleLayer(layers.vias,e.target.checked);
+  document.getElementById("cap-construcciones").onchange = e=>toggleLayer(layers.construcciones,e.target.checked);
+  document.getElementById("cap-sectores").onchange = e=>{
+    toggleLayer(layers.sectores,e.target.checked);
+    // También ocultar/mostrar etiquetas (tooltips permanentes)
+    const show = e.target.checked;
+    if(layers.sectores){
+      layers.sectores.eachLayer(l=>{
+        const tt = l.getTooltip();
+        if(tt){
+          show?tt._source.openTooltip():map.closeTooltip(tt);
         }
       });
-    };
-    legend.appendChild(li);
+    }
+  };
+
+  // Selector de sector
+  document.getElementById("sector-filter").addEventListener("change", e=>{
+    applySectorFilter(e.target.value);
   });
 }
 
-setTimeout(buildLegend, 2000);  // Esperar carga completa de sectores
+/* ---------- Layer visibility ---------- */
+function toggleLayer(layer,show){
+  if(!layer) return;
+  if(show) layer.addTo(map);
+  else map.removeLayer(layer);
+}
+
+/* ---------- Sector Filtering ---------- */
+function applySectorFilter(rawName){
+  const selNameNorm = norm(rawName);
+  const showAll = !rawName;
+
+  // Construcciones -> atenuar
+  if(layers.construcciones){
+    layers.construcciones.eachLayer(l=>{
+      const sec = norm(l.feature?.properties?.SECTOR || "");
+      const match = showAll || sec===selNameNorm;
+      l.setStyle({
+        opacity:match?1:0.1,
+        fillOpacity:match?0.7:0.05
+      });
+    });
+  }
+
+  // Encuestas -> atenuar
+  if(layers.encuestas){
+    layers.encuestas.eachLayer(l=>{
+      const sec = norm(l.feature?.properties?.SECTOR || "");
+      const match = showAll || sec===selNameNorm;
+      l.setStyle({
+        opacity:match?1:0.1,
+        fillOpacity:match?1:0.1
+      });
+    });
+  }
+
+  // Sectores -> resaltar
+  if(layers.sectores){
+    layers.sectores.eachLayer(l=>{
+      const sec = norm(l.feature?.properties?.SECTOR || l.feature?.properties?.NOMBRESECT);
+      l.setStyle({fillOpacity:(showAll||sec===selNameNorm)?0.6:0.1});
+      if(sec===selNameNorm && !showAll){
+        map.fitBounds(l.getBounds());
+      }
+    });
+  }
+
+  // Actualizar stats
+  if(showAll) updateStatsGlobal();
+  else updateStatsSector(selNameNorm);
+}
+
+/* ---------- Stats ---------- */
+function updateStatsGlobal(){
+  const stats = document.getElementById("stats");
+  stats.innerHTML = `
+    <strong>Estadísticas:</strong><br>
+    Sectores: ${totalSectores}<br>
+    Construcciones: ${allConstrucciones.length}<br>
+    Encuestas: ${allEncuestas.length}
+  `;
+}
+
+function updateStatsSector(keyNorm){
+  const name = sectorNameDisplay[keyNorm] || keyNorm;
+
+  // Conteos por propiedad SECTOR (normalizada)
+  const c = allConstrucciones.filter(f=>norm(f.properties?.SECTOR)===keyNorm).length;
+  const e = allEncuestas.filter(f=>norm(f.properties?.SECTOR)===keyNorm).length;
+
+  const stats = document.getElementById("stats");
+  stats.innerHTML = `
+    <strong>Sector: ${name}</strong><br>
+    Construcciones: ${c}<br>
+    Encuestas: ${e}
+  `;
+}
+
+/* ---------- Legend ---------- */
+function buildLegend(){
+  const list = document.getElementById("legend-list");
+  list.innerHTML = "";
+  // Sort legend alphabetically by display name
+  const entries = Object.entries(sectorNameDisplay).sort((a,b)=>a[1].localeCompare(b[1],"es",{sensitivity:"base"}));
+  entries.forEach(([key,colorName])=>{
+    const color = sectorColors[key];
+    const li = document.createElement("li");
+    li.innerHTML = `<span style="background:${color}"></span>${colorName}`;
+    li.title = `Zoom al sector ${colorName}`;
+    li.addEventListener("click",()=>{
+      // Zoom al sector
+      if(layers.sectores){
+        layers.sectores.eachLayer(l=>{
+          const sec = norm(l.feature?.properties?.SECTOR || l.feature?.properties?.NOMBRESECT);
+          if(sec===key){
+            map.fitBounds(l.getBounds(),{padding:[20,20]});
+          }
+        });
+      }
+    });
+    // Alt+clic: filtra
+    li.addEventListener("auxclick",()=>{});
+    li.addEventListener("contextmenu",e=>e.preventDefault());
+    li.addEventListener("dblclick",e=>{
+      e.preventDefault();
+      // activar filtro
+      const sel = document.getElementById("sector-filter");
+      sel.value = colorName;
+      applySectorFilter(colorName);
+    });
+    list.appendChild(li);
+  });
+}
