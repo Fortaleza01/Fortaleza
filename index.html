@@ -1,31 +1,80 @@
-/* Animación para info-box */
-#info-box {
-  transition: max-height 0.3s ease;
-  overflow: hidden;
-  max-height: 400px;
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Visor La Fortaleza</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <link rel="stylesheet" href="style.css?v=20250825" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="script.js?v=20250825" defer></script>
+</head>
+<body>
+  <!-- LOGOS -->
+  <header>
+    <img src="LOGOS FORTALEZA.001.jpeg" alt="Logos institucionales La Fortaleza" class="logos-header" loading="lazy" />
+  </header>
 
-/* Botón menú lateral */
-#toggle-sidebar {
-  background: #fff;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-  z-index: 1101;
-}
+  <!-- BOTÓN PANEL LATERAL -->
+  <button id="toggle-sidebar" aria-label="Mostrar/Ocultar panel lateral">☰</button>
 
-/* Botón info-box */
-#info-box + button, .info-toggle-btn {
-  background: #f9f9f9;
-  border: 1px solid #bbb;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: .9rem;
-  cursor: pointer;
-  margin: 10px auto;
-  display: block;
-  box-shadow: 0 2px 6px rgba(0,0,0,.06);
-}
+  <!-- MAPA -->
+  <div id="map" role="region" aria-label="Mapa interactivo de La Fortaleza">
+    <div id="map-welcome" class="map-welcome">
+      ¡Bienvenido al visor de La Fortaleza!
+    </div>
+  </div>
+
+  <!-- PANEL LATERAL -->
+  <nav id="sidebar" aria-label="Controles del visor">
+    <div id="sidebar-content">
+      <h3>Capas</h3>
+      <label><input type="checkbox" id="cap-encuestas" checked /> Encuestas</label>
+      <label><input type="checkbox" id="cap-vias" checked /> Vías</label>
+      <label><input type="checkbox" id="cap-construcciones" checked /> Construcciones</label>
+      <label><input type="checkbox" id="cap-sectores" checked /> Sectores</label>
+
+      <hr />
+
+      <h3>Filtrar por sector</h3>
+      <select id="sector-filter">
+        <option value="">— Mostrar todos —</option>
+      </select>
+
+      <hr />
+
+      <h3>Herramientas</h3>
+      <button id="center-map">Centrar mapa</button>
+      <button id="switch-basemap">Cambiar mapa base</button>
+    </div>
+  </nav>
+
+  <!-- ESTADÍSTICAS -->
+  <div id="stats" role="status" aria-live="polite">Cargando estadísticas...</div>
+
+  <!-- LEYENDA -->
+  <div id="legend" aria-label="Leyenda de sectores">
+    <strong>Leyenda sectores</strong>
+    <ul id="legend-list"></ul>
+  </div>
+
+  <!-- INFO BOX EN PANTALLA -->
+  <aside id="info-box" aria-label="Información del Proyecto">
+    <h2>Información del Proyecto</h2>
+    <p>
+      <strong>CONSTRUCCIÓN DE PAZ URBANA. LA FORTALEZA EN CÚCUTA:</strong><br />
+      Territorio afectado por el conflicto armado y la inequidad social en la mujer.<br /><br />
+      Proyecto Orquídea No. 109089 – Ministerio de Ciencia, Tecnología e Innovación – Minciencias.<br />
+      Entidad ejecutora: Pontificia Universidad Javeriana.<br /><br />
+      Este visor forma parte de un ejercicio académico de investigación aplicada sobre hábitat popular, instrumentos de análisis territorial, y reconstrucción de tejido social desde el urbanismo.
+    </p>
+  </aside>
+
+  <!-- CRÉDITOS -->
+  <footer id="credits" aria-label="Créditos">
+    Proyecto académico de investigación: CONSTRUCCIÓN DE PAZ URBANA – La Fortaleza (Cúcuta)<br />
+    Proyecto Orquídea No. 109089 | Minciencias – PUJ Bogotá, 2025
+  </footer>
+</body>
+</html>

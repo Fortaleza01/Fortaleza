@@ -53,7 +53,7 @@ async function init() {
     // Crear botón para mostrar/ocultar info-box
     const infoToggleBtn = document.createElement('button');
     infoToggleBtn.textContent = 'Mostrar/Ocultar información';
-    infoToggleBtn.className = 'info-toggle-btn';
+    infoToggleBtn.className = 'info-toggle-btn active';
     infoToggleBtn.setAttribute('aria-label', 'Mostrar u ocultar información del proyecto');
     infoBox.parentNode.insertBefore(infoToggleBtn, infoBox);
 

@@ -57,6 +57,16 @@ header {
   position: absolute;
   inset: 0;
 }
+.map-welcome {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(255,255,255,0.8);
+  padding:1em;
+  border-radius:8px;
+  z-index:999;
+}
 
 /* LEYENDA Y STATS */
 #legend, #stats {
@@ -111,6 +121,9 @@ header {
 
 /* Botón menú lateral */
 #toggle-sidebar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
   background: #fff;
   border: 1px solid #bbb;
   border-radius: 6px;
